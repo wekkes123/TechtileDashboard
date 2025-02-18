@@ -8,6 +8,8 @@
   },
   "private": true,
   "dependencies": {
-    "antd": "^5.24.1"
+    "antd": "^5.24.1",
+    "js-yaml": "^4.1.0"
   }
 }
+
