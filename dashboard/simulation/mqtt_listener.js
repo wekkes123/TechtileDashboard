@@ -1,21 +1,12 @@
-const mqtt = require('mqtt');
+const { client } = require("./mqtt_config");
 
-const BROKER_URL = "mqtt://test.mosquitto.org";
-const client = mqtt.connect(BROKER_URL);
-
-const TOPIC = "raspberrypi/monitoring";
-
-// Connect and subscribe
-client.on('connect', () => {
-    console.log("Connected to MQTT broker, subscribing to", TOPIC);
-    client.subscribe(TOPIC);
+// Subscribe to topic
+client.on("connect", () => {
+    console.log("Listener connected, subscribing...");
+    client.subscribe("rpi/data");
 });
 
 // Handle incoming messages
-client.on('message', (topic, message) => {
-    console.log(`Received data: ${message.toString()}`);
-});
-
-client.on('error', (err) => {
-    console.error("MQTT Error:", err);
+client.on("message", (topic, message) => {
+    console.log(`Received on ${topic}:`, message.toString());
 });
