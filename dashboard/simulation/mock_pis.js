@@ -10,7 +10,7 @@ function publishMockData() {
 
         client.publish("rpi/data", JSON.stringify(data));
         console.log("Published:", data);
-    }, 5000);
+    }, 100);
 }
 
 // Run when connected
