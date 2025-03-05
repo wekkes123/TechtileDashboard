@@ -1,6 +1,7 @@
-import { useState, useReducer } from "react";
+import {useState, useReducer, useEffect} from "react";
 import { Layout, Button, Drawer, Card, Modal, message } from "antd";
 import { MenuOutlined } from "@ant-design/icons";
+import { generateMockData } from "./mockDataGenerator";
 
 const { Header, Content } = Layout;
 
@@ -129,6 +130,17 @@ const Dashboard = () => {
         message.info(`Reset tile ${tileId} on ${wall}`);
     };
 
+    // Find tile's location by ID
+    const findTileById = (tileId) => {
+        for (const wall in walls) {
+            if (walls[wall].tiles[tileId]) {
+                return { wall, tileId };
+            }
+        }
+        return null;
+    };
+
+
     // Debug functions for testing
     const debugFunctions = {
         toggleSingleTile: () => {
@@ -158,6 +170,31 @@ const Dashboard = () => {
             bulkUpdateTiles(updates);
         }
     };
+
+    const handleMessage = (data) => {
+        try {
+            console.log("Received data:", data);
+            //setLastMessage(data); // Store the last received message
+
+            const tileLocation = findTileById(data.id);
+            if (tileLocation) {
+                updateTile(tileLocation.wall, tileLocation.tileId, {
+                    value: Math.round(parseFloat(data.temp)),
+                    isActive: data.status === "1"
+                });
+            } else {
+                console.warn(`No tile found for ID: ${data.id}`);
+            }
+        } catch (error) {
+            console.error("Error processing data:", error);
+        }
+    };
+
+
+    useEffect(() => {
+        generateMockData(handleMessage);
+    }, []);
+
 
     const openModal = (wallName, tileKey) => {
         const selectedTileInfo = walls[wallName].tiles[tileKey];
@@ -301,3 +338,41 @@ const Dashboard = () => {
 };
 
 export default Dashboard;
+
+/*
+example functions at the bottom
+updateTile(wall, tileId, updates): Update a single tile
+bulkUpdateTiles(updates): Update multiple tiles simultaneously
+resetTile(wall, tileId): Reset a tile to its initial state
+ */
+
+
+// Tile management reducer
+/*
+A reducer is a way in react to change the state of something, this implementation provides a way to do bulk updates and have more predictable and consistent.
+ */
+
+/*
+// Update a single tile
+updateTile("Wall East", "A1", {
+    value: 42,
+    metadata: { source: "information stream" }
+});
+
+// Bulk update multiple tiles
+bulkUpdateTiles([
+    {
+        wall: "Wall West",
+        tileId: "B12",
+        updates: { value: 100, metadata: { priority: "high" } }
+    },
+    {
+        wall: "Ceiling",
+        tileId: "C7",
+        updates: { value: 75, metadata: { status: "active" } }
+    }
+]);
+
+// Reset a tile
+resetTile("Wall East", "A1");
+ */

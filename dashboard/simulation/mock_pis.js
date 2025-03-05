@@ -1,4 +1,4 @@
-const { client } = require("../mqtt_config");
+const { client } = require("../src/MQTT/mqtt_config2");
 
 function publishMockData() {
     const interval = 500; // Adjust this value to slow down or speed up (milliseconds)

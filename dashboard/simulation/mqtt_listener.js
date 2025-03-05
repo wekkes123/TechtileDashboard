@@ -1,4 +1,4 @@
-const { client } = require("../mqtt_config");
+const { client } = require("../src/MQTT/mqtt_config2");
 
 // Subscribe to topic
 client.on("connect", () => {
