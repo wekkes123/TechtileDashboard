@@ -1,7 +1,7 @@
 import {useState, useReducer, useEffect} from "react";
 import { Layout, Button, Drawer, Card, Modal, message } from "antd";
 import { MenuOutlined } from "@ant-design/icons";
-import { generateMockData } from "./mockDataGenerator";
+import { generateMockData } from "./mqttWebSocketListener";
 
 const { Header, Content } = Layout;
 
