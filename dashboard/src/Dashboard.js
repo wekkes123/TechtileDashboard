@@ -144,19 +144,6 @@ const Dashboard = () => {
 
     // Debug functions for testing
     const debugFunctions = {
-        toggleSingleTile: () => {
-            const wall = "Wall East";
-            const tileId = "A1";
-            updateTile(wall, tileId, { isActive: false });
-        },
-        toggleMultipleTiles: () => {
-            const updates = [
-                { wall: "Wall East", tileId: "A1", updates: { isActive: false } },
-                { wall: "Wall West", tileId: "B12", updates: { isActive: false } },
-                { wall: "Ceiling", tileId: "C7", updates: { isActive: false } }
-            ];
-            bulkUpdateTiles(updates);
-        },
         reactivateAllTiles: () => {
             const updates = [];
             Object.keys(walls).forEach(wall => {
@@ -235,20 +222,6 @@ const Dashboard = () => {
                         marginTop: "10px"
                     }}>
                         <Button
-                            onClick={debugFunctions.toggleSingleTile}
-                            type="primary"
-                            danger
-                        >
-                            Toggle Single Tile
-                        </Button>
-                        <Button
-                            onClick={debugFunctions.toggleMultipleTiles}
-                            type="primary"
-                            danger
-                        >
-                            Toggle Multiple Tiles
-                        </Button>
-                        <Button
                             onClick={debugFunctions.reactivateAllTiles}
                             type="primary"
                             style={{backgroundColor: "green"}}
@@ -313,12 +286,6 @@ const Dashboard = () => {
                 open={open}
                 style={{position: "absolute", right: 0}}
             >
-                <h3>Debug Functions:</h3>
-                <ul>
-                    <li><strong>Toggle Single Tile:</strong> Deactivates A1 on Wall East</li>
-                    <li><strong>Toggle Multiple Tiles:</strong> Deactivates tiles on different walls</li>
-                    <li><strong>Reactivate All Tiles:</strong> Resets all tiles to active state</li>
-                </ul>
             </Drawer>
             <Modal
                 title={selectedTile ? `Tile: ${selectedTile.id}` : "Tile Info"}
