@@ -1,7 +1,8 @@
 import {useState, useReducer, useEffect} from "react";
 import { Layout, Button, Drawer, Card, Modal, message } from "antd";
 import { MenuOutlined } from "@ant-design/icons";
-import { generateMockData } from "./mqttWebSocketListener";
+import { generateMockData } from "./Components/mqttWebSocketListener";
+import InfoBar from "./Components/ServerBar";
 
 const { Header, Content } = Layout;
 
@@ -173,7 +174,7 @@ const Dashboard = () => {
 
     const handleMessage = (data) => {
         try {
-            console.log("Received data:", data);
+            //console.log("Received data:", data);
             //setLastMessage(data); // Store the last received message
 
             const tileLocation = findTileById(data.id);
@@ -203,8 +204,8 @@ const Dashboard = () => {
     };
 
     return (
-        <Layout style={{ minHeight: "100vh", display: "flex" }}>
-            <Layout style={{ width: open ? "50vw" : "100vw", transition: "width 0.3s ease" }}>
+        <Layout style={{minHeight: "100vh", display: "flex"}}>
+            <Layout style={{width: open ? "50vw" : "100vw", transition: "width 0.3s ease"}}>
                 <Header style={{
                     background: "#001529",
                     padding: "0 16px",
@@ -217,10 +218,10 @@ const Dashboard = () => {
                         justifyContent: "space-between",
                         alignItems: "center"
                     }}>
-                        <h1 style={{ color: "white", margin: 0 }}>Dashboard</h1>
+                        <h1 style={{color: "white", margin: 0}}>Dashboard</h1>
                         <Button
                             type="primary"
-                            icon={<MenuOutlined />}
+                            icon={<MenuOutlined/>}
                             onClick={() => setOpen(true)}
                             style={{marginRight: '15px'}}
                         >
@@ -250,24 +251,36 @@ const Dashboard = () => {
                         <Button
                             onClick={debugFunctions.reactivateAllTiles}
                             type="primary"
-                            style={{ backgroundColor: "green" }}
+                            style={{backgroundColor: "green"}}
                         >
                             Reactivate All Tiles
                         </Button>
                     </div>
                 </Header>
-                <Content style={{ padding: "16px", display: "grid", gridTemplateColumns: "1fr 1fr", gap: "40px" }}>
-                    {Object.entries(walls).map(([wallName, { rows, cols, tiles }]) => (
-                        <div key={wallName} style={{ marginBottom: "20px" }}>
-                            <h2 style={{ textAlign: "center" }}>{wallName}</h2>
-                            <div style={{ display: "grid", gridTemplateColumns: "auto repeat(6, 1fr)", gap: "10px", alignItems: "center" }}>
+                <Content style={{padding: "16px", display: "grid", gridTemplateColumns: "1fr 1fr", gap: "40px"}}>
+                    {Object.entries(walls).map(([wallName, {rows, cols, tiles}]) => (
+                        <div key={wallName} style={{marginBottom: "20px"}}>
+                            <h2 style={{textAlign: "center"}}>{wallName}</h2>
+                            <div style={{
+                                display: "grid",
+                                gridTemplateColumns: "auto repeat(6, 1fr)",
+                                gap: "10px",
+                                alignItems: "center"
+                            }}>
                                 <div></div>
                                 {cols.map((colLabel) => (
-                                    <div key={colLabel} style={{ textAlign: "center", fontWeight: "bold" }}>{colLabel}</div>
+                                    <div key={colLabel}
+                                         style={{textAlign: "center", fontWeight: "bold"}}>{colLabel}</div>
                                 ))}
                                 {rows.map((rowLabel) => (
                                     <>
-                                        <div style={{ textAlign: "center", fontWeight: "bold", display: "flex", alignItems: "center", justifyContent: "center" }}>{rowLabel}</div>
+                                        <div style={{
+                                            textAlign: "center",
+                                            fontWeight: "bold",
+                                            display: "flex",
+                                            alignItems: "center",
+                                            justifyContent: "center"
+                                        }}>{rowLabel}</div>
                                         {cols.map((colLabel) => {
                                             const tileKey = `${colLabel}${rowLabel}`;
                                             const tile = tiles[tileKey];
@@ -298,7 +311,7 @@ const Dashboard = () => {
                 width="50vw"
                 onClose={() => setOpen(false)}
                 open={open}
-                style={{ position: "absolute", right: 0 }}
+                style={{position: "absolute", right: 0}}
             >
                 <h3>Debug Functions:</h3>
                 <ul>
@@ -333,6 +346,7 @@ const Dashboard = () => {
                     </div>
                 )}
             </Modal>
+            <div><InfoBar/></div>
         </Layout>
     );
 };

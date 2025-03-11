@@ -1,0 +1,16 @@
+thresholds:
+  cpuLoad:
+    warning: 70
+    critical: 90
+  ram:
+    warning: 75
+    critical: 95
+  internalDisk:
+    warning: 80
+    critical: 95
+  raidDisk:
+    warning: 85
+    critical: 98
+  cpuTemp:
+    warning: 60
+    critical: 80

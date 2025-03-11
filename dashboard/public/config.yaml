@@ -1,7 +1,0 @@
-dashboard:
-  title: "Techtile Dashboard"
-  widgets:
-    - name: "Test yaml info"
-      type: "RPI"
-      unit: "°C"
-

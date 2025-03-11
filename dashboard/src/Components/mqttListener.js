@@ -19,9 +19,10 @@ export default function MqttListener() {
             });
         });
 
+        /*
         client.on("message", (topic, message) => {
             console.log(`Received on ${topic}:`, message.toString());
-        });
+        });*/
 
         client.on("error", (err) => {
             console.error("MQTT Connection Error:", err);
@@ -32,3 +33,4 @@ export default function MqttListener() {
 
     return <div>Check the console for MQTT messages</div>;
 }
+

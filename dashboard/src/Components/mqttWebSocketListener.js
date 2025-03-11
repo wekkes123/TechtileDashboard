@@ -39,7 +39,7 @@ export function generateMockData(handleMessage) {
     client.on("message", (topic, message) => {
         try {
             const data = JSON.parse(message.toString()); // Parse JSON
-            console.log(`Received:`, data);
+            //console.log(`Received:`, data);
             handleMessage(data); // Pass to Dashboard function
         } catch (error) {
             console.error("Error parsing message:", error);

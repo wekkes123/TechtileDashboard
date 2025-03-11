@@ -10,6 +10,7 @@
     "@testing-library/user-event": "^13.5.0",
     "antd": "^5.24.1",
     "js-sdsl": "^4.4.2",
+    "js-yaml": "^4.1.0",
     "mqtt": "^5.10.4",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",

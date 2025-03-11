@@ -1,7 +1,7 @@
 import React from 'react';
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
-import Dashboard from "./Pages/Dashboard";
-import MqttListener from "./Pages/mqttListener";
+import Dashboard from "./Dashboard";
+import MqttListener from "./Components/mqttListener";
 
 const App = () => {
   return (
