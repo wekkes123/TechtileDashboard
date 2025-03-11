@@ -1,11 +1,13 @@
 import {useState, useReducer, useEffect} from "react";
-import { Layout, Button, Drawer, Card, Modal, message } from "antd";
+import { Layout, Button, message } from "antd";
 import { MenuOutlined } from "@ant-design/icons";
 import { generateMockData } from "./Components/mqttWebSocketListener";
 import InfoBar from "./Components/ServerBar";
+import Wall from "./Components/Wall";
+import ControlPanel from "./Components/ControlPanel";
+import Segment from "./Components/Segment";
 
-const { Header, Content } = Layout;
-
+const { Header, Content, Footer } = Layout;
 
 const tilesReducer = (state, action) => {
     switch (action.type) {
@@ -99,10 +101,11 @@ const Dashboard = () => {
         });
     });
 
+    const segments = ["A", "B", "C", "D", "E", "F"];
+
     const [walls, dispatchTiles] = useReducer(tilesReducer, initialWalls);
     const [open, setOpen] = useState(false);
-    const [modalOpen, setModalOpen] = useState(false);
-    const [selectedTile, setSelectedTile] = useState(null);
+    const [viewMode, setViewMode] = useState("walls");
 
     // Function to update a single tile
     const updateTile = (wall, tileId, updates) => {
@@ -183,13 +186,6 @@ const Dashboard = () => {
         generateMockData(handleMessage);
     }, []);
 
-
-    const openModal = (wallName, tileKey) => {
-        const selectedTileInfo = walls[wallName].tiles[tileKey];
-        setSelectedTile(selectedTileInfo);
-        setModalOpen(true);
-    };
-
     return (
         <Layout style={{minHeight: "100vh", display: "flex"}}>
             <Layout style={{width: open ? "50vw" : "100vw", transition: "width 0.3s ease"}}>
@@ -210,9 +206,9 @@ const Dashboard = () => {
                             type="primary"
                             icon={<MenuOutlined/>}
                             onClick={() => setOpen(true)}
-                            style={{marginRight: '15px'}}
+                            style={{marginRight: '15px', marginTop: '35px'}}
                         >
-                            Open Panel
+                            Settings
                         </Button>
                     </div>
                     <div style={{
@@ -230,90 +226,22 @@ const Dashboard = () => {
                         </Button>
                     </div>
                 </Header>
-                <Content style={{padding: "16px", display: "grid", gridTemplateColumns: "1fr 1fr", gap: "40px"}}>
-                    {Object.entries(walls).map(([wallName, {rows, cols, tiles}]) => (
-                        <div key={wallName} style={{marginBottom: "20px"}}>
-                            <h2 style={{textAlign: "center"}}>{wallName}</h2>
-                            <div style={{
-                                display: "grid",
-                                gridTemplateColumns: "auto repeat(6, 1fr)",
-                                gap: "10px",
-                                alignItems: "center"
-                            }}>
-                                <div></div>
-                                {cols.map((colLabel) => (
-                                    <div key={colLabel}
-                                         style={{textAlign: "center", fontWeight: "bold"}}>{colLabel}</div>
-                                ))}
-                                {rows.map((rowLabel) => (
-                                    <>
-                                        <div style={{
-                                            textAlign: "center",
-                                            fontWeight: "bold",
-                                            display: "flex",
-                                            alignItems: "center",
-                                            justifyContent: "center"
-                                        }}>{rowLabel}</div>
-                                        {cols.map((colLabel) => {
-                                            const tileKey = `${colLabel}${rowLabel}`;
-                                            const tile = tiles[tileKey];
-                                            return (
-                                                <Card
-                                                    key={tileKey}
-                                                    onClick={() => openModal(wallName, tileKey)}
-                                                    style={{
-                                                        background: tile.isActive ? "#dfffd6" : "#ffd6d6",
-                                                        textAlign: "center",
-                                                        cursor: "pointer"
-                                                    }}
-                                                >
-                                                    {tileKey} ({tile.value})
-                                                </Card>
-                                            );
-                                        })}
-                                    </>
-                                ))}
-                            </div>
-                        </div>
-                    ))}
+                <Content style={{ padding: "16px", display: "grid", gridTemplateColumns: "1fr 1fr", gap: "40px" }}>
+                    {viewMode === "walls" ? (
+                        Object.entries(walls).map(([wallName, wallData]) => (
+                            <Wall key={wallName} wallName={wallName} wallData={wallData} updateTile={updateTile} />
+                        ))
+                    ) : (
+                        segments.map((segmentLabel) => (
+                            <Segment key={segmentLabel} segmentLabel={segmentLabel} walls={walls} updateTile={updateTile} />
+                        ))
+                    )}
                 </Content>
+
             </Layout>
-            <Drawer
-                title="Tile Management"
-                placement="right"
-                width="50vw"
-                onClose={() => setOpen(false)}
-                open={open}
-                style={{position: "absolute", right: 0}}
-            >
-            </Drawer>
-            <Modal
-                title={selectedTile ? `Tile: ${selectedTile.id}` : "Tile Info"}
-                open={modalOpen}
-                onCancel={() => setModalOpen(false)}
-                footer={null}
-            >
-                {selectedTile && (
-                    <div>
-                        <p>Wall: {selectedTile.wall}</p>
-                        <p>Tile ID: {selectedTile.id}</p>
-                        <p>Row: {selectedTile.row}</p>
-                        <p>Column: {selectedTile.col}</p>
-                        <p>Current Value: {selectedTile.value}</p>
-                        <p>Active Status: {selectedTile.isActive ? "Active" : "Inactive"}</p>
-                        <p>Metadata: {JSON.stringify(selectedTile.metadata)}</p>
-                        <Button onClick={() => {
-                            updateTile(selectedTile.wall, selectedTile.id, {
-                                isActive: !selectedTile.isActive
-                            });
-                            setModalOpen(false);
-                        }}>
-                            Toggle Tile Status
-                        </Button>
-                    </div>
-                )}
-            </Modal>
-            <div><InfoBar/></div>
+            <ControlPanel open={open} onClose={() => setOpen(false)} viewMode={viewMode} setViewMode={setViewMode} />
+
+            <Footer><InfoBar/></Footer>
         </Layout>
     );
 };

@@ -1,0 +1,1 @@
+//Should be displayed: Status(Enable/Disable), Power, Max power, Class(0<-->8), be able to enable disable

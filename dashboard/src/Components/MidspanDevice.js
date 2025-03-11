@@ -1,0 +1,1 @@
+// Should display: Total power consumption, max available power budget, system voltage, status

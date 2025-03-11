@@ -1,0 +1,1 @@
+//Should display: System current, System Voltage, System Power, Frequency
