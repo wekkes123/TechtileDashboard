@@ -6,185 +6,82 @@ import InfoBar from "./Components/ServerBar";
 import Wall from "./Components/Wall";
 import ControlPanel from "./Components/ControlPanel";
 import Segment from "./Components/Segment";
+import yaml from "js-yaml";
 
 const { Header, Content, Footer } = Layout;
 
-const tilesReducer = (state, action) => {
-    switch (action.type) {
-        case 'UPDATE_TILE':
-            return {
-                ...state,
-                [action.payload.wall]: {
-                    ...state[action.payload.wall],
-                    tiles: {
-                        ...state[action.payload.wall].tiles,
-                        [action.payload.tileId]: {
-                            ...state[action.payload.wall].tiles[action.payload.tileId],
-                            ...action.payload.updates
-                        }
-                    }
-                }
-            };
+async function fetchHosts() {
+    const response = await fetch("/hosts.yaml");
+    const text = await response.text();
+    return yaml.load(text);
+}
 
-        case 'BULK_UPDATE_TILES':
-            const updatedState = { ...state };
-            action.payload.forEach(({ wall, tileId, updates }) => {
-                updatedState[wall].tiles[tileId] = {
-                    ...updatedState[wall].tiles[tileId],
-                    ...updates
-                };
-            });
-            return updatedState;
-
-        case 'RESET_TILE':
-            return {
-                ...state,
-                [action.payload.wall]: {
-                    ...state[action.payload.wall],
-                    tiles: {
-                        ...state[action.payload.wall].tiles,
-                        [action.payload.tileId]: {
-                            ...state[action.payload.wall].tiles[action.payload.tileId],
-                            value: 0,
-                            metadata: {},
-                            isActive: true
-                        }
-                    }
-                }
-            };
-
-        default:
-            return state;
-    }
-};
+function generateTiles(wallName, wallData) {
+    const tiles = {};
+    Object.keys(wallData).forEach((key) => {
+        tiles[key] = {
+            id: key,
+            wall: wallName,
+            row: key.slice(1),
+            col: key.charAt(0),
+            value: 0,
+            metadata: {},
+            isActive: true,
+        };
+    });
+    return tiles;
+}
 
 const Dashboard = () => {
-    const initialWalls = {
-        "Wall East": {
-            rows: ["1", "2", "3", "4"],
-            cols: ["A", "B", "C", "D", "E", "F"],
-            tiles: {}
-        },
-        "Wall West": {
-            rows: ["11", "12", "13", "14"],
-            cols: ["A", "B", "C", "D", "E", "F"],
-            tiles: {}
-        },
-        "Ceiling": {
-            rows: ["5", "6", "7", "8", "9", "10"],
-            cols: ["A", "B", "C", "D", "E", "F"],
-            tiles: {}
-        },
-        "Floor": {
-            rows: ["15", "16", "17", "18", "19", "20"],
-            cols: ["A", "B", "C", "D", "E", "F"],
-            tiles: {}
-        }
-    };
-
-    // Initialize tiles
-    Object.keys(initialWalls).forEach(wallName => {
-        initialWalls[wallName].tiles = {};
-        initialWalls[wallName].rows.forEach((rowLabel) => {
-            initialWalls[wallName].cols.forEach((colLabel) => {
-                const tileKey = `${colLabel}${rowLabel}`;
-                initialWalls[wallName].tiles[tileKey] = {
-                    id: tileKey,
-                    wall: wallName,
-                    row: rowLabel,
-                    col: colLabel,
-                    value: 0,
-                    metadata: {},
-                    isActive: true  // New boolean flag
-                };
-            });
-        });
-    });
-
-    const segments = ["A", "B", "C", "D", "E", "F"];
-
-    const [walls, dispatchTiles] = useReducer(tilesReducer, initialWalls);
+    const [fetchedData, setFetchedData] = useState({})
+    const [rpiCells, setRpiCells] = useState({});
+    const [midspans, setMidspans] = useState({});
+    const [wallNames, setWallNames] = useState({});
+    const [segments, setSegments] = useState({})
+    const [walls, setWalls] = useState({})
     const [open, setOpen] = useState(false);
     const [viewMode, setViewMode] = useState("walls");
 
-    // Function to update a single tile
-    const updateTile = (wall, tileId, updates) => {
-        dispatchTiles({
-            type: 'UPDATE_TILE',
-            payload: { wall, tileId, updates }
-        });
-        message.success(`Updated tile ${tileId} on ${wall}`);
-    };
-
-    // Function to bulk update tiles
-    const bulkUpdateTiles = (updates) => {
-        dispatchTiles({
-            type: 'BULK_UPDATE_TILES',
-            payload: updates
-        });
-        message.success(`Bulk updated ${updates.length} tiles`);
-    };
-
-    // Function to reset a tile
-    const resetTile = (wall, tileId) => {
-        dispatchTiles({
-            type: 'RESET_TILE',
-            payload: { wall, tileId }
-        });
-        message.info(`Reset tile ${tileId} on ${wall}`);
-    };
-
-    // Find tile's location by ID
-    const findTileById = (tileId) => {
-        for (const wall in walls) {
-            if (walls[wall].tiles[tileId]) {
-                return { wall, tileId };
-            }
-        }
-        return null;
-    };
-
-
-    // Debug functions for testing
-    const debugFunctions = {
-        reactivateAllTiles: () => {
-            const updates = [];
-            Object.keys(walls).forEach(wall => {
-                Object.keys(walls[wall].tiles).forEach(tileId => {
-                    updates.push({
-                        wall,
-                        tileId,
-                        updates: { isActive: true }
-                    });
-                });
-            });
-            bulkUpdateTiles(updates);
-        }
-    };
-
-    const handleMessage = (data) => {
-        try {
-            //console.log("Received data:", data);
-            //setLastMessage(data); // Store the last received message
-
-            const tileLocation = findTileById(data.id);
-            if (tileLocation) {
-                updateTile(tileLocation.wall, tileLocation.tileId, {
-                    value: Math.round(parseFloat(data.temp)),
-                    isActive: data.status === "1"
-                });
-            } else {
-                console.warn(`No tile found for ID: ${data.id}`);
-            }
-        } catch (error) {
-            console.error("Error processing data:", error);
-        }
-    };
-
+    useEffect(() => {
+        fetchHosts()
+            .then((data) => {
+                setFetchedData(data.all);
+            })
+            .catch((error) => console.error("Failed to load hosts.yaml:", error));
+    }, []);
 
     useEffect(() => {
-        generateMockData(handleMessage);
-    }, []);
+        if (!fetchedData || Object.keys(fetchedData).length === 0) {
+            console.log(fetchedData)
+            console.warn("Data is undefined or empty, skipping iteration.");
+            return;
+        }
+
+        setRpiCells(fetchedData.hosts);
+        setMidspans(fetchedData.vars.midspans);
+        setWallNames(fetchedData.children.rpis.children);
+
+        const extractedWalls = {};
+        const extractedSegments = {};
+
+        Object.keys(fetchedData.children).forEach((key) => {
+            if (key.startsWith("segment")) {
+                extractedSegments[key] = {
+                    tiles: generateTiles(key, fetchedData.children[key].hosts),
+                };
+            }
+            else if (key in wallNames) {
+                extractedWalls[key] = {
+                    tiles: generateTiles(key, fetchedData.children[key].hosts),
+                };
+            }
+        });
+
+        setWalls(extractedWalls);
+        setSegments(extractedSegments);
+        console.log(extractedSegments)
+
+    }, [fetchedData]);
 
     return (
         <Layout style={{minHeight: "100vh", display: "flex"}}>
@@ -211,34 +108,21 @@ const Dashboard = () => {
                             Settings
                         </Button>
                     </div>
-                    <div style={{
-                        display: "flex",
-                        justifyContent: "center",
-                        gap: "10px",
-                        marginTop: "10px"
-                    }}>
-                        <Button
-                            onClick={debugFunctions.reactivateAllTiles}
-                            type="primary"
-                            style={{backgroundColor: "green"}}
-                        >
-                            Reactivate All Tiles
-                        </Button>
-                    </div>
                 </Header>
                 <Content style={{ padding: "16px", display: "grid", gridTemplateColumns: "1fr 1fr", gap: "40px" }}>
                     {viewMode === "walls" ? (
                         Object.entries(walls).map(([wallName, wallData]) => (
-                            <Wall key={wallName} wallName={wallName} wallData={wallData} updateTile={updateTile} />
+                            <Wall key={wallName} wallName={wallName} wallData={wallData} />
                         ))
                     ) : (
-                        segments.map((segmentLabel) => (
-                            <Segment key={segmentLabel} segmentLabel={segmentLabel} walls={walls} updateTile={updateTile} />
+                        Object.entries(segments).map(([segmentLabel, segmentData]) => (
+                            <Segment key={segmentLabel} segmentLabel={segmentLabel} segmentData={segmentData} />
                         ))
                     )}
                 </Content>
 
             </Layout>
+
             <ControlPanel open={open} onClose={() => setOpen(false)} viewMode={viewMode} setViewMode={setViewMode} />
 
             <Footer><InfoBar/></Footer>
@@ -247,41 +131,3 @@ const Dashboard = () => {
 };
 
 export default Dashboard;
-
-/*
-example functions at the bottom
-updateTile(wall, tileId, updates): Update a single tile
-bulkUpdateTiles(updates): Update multiple tiles simultaneously
-resetTile(wall, tileId): Reset a tile to its initial state
- */
-
-
-// Tile management reducer
-/*
-A reducer is a way in react to change the state of something, this implementation provides a way to do bulk updates and have more predictable and consistent.
- */
-
-/*
-// Update a single tile
-updateTile("Wall East", "A1", {
-    value: 42,
-    metadata: { source: "information stream" }
-});
-
-// Bulk update multiple tiles
-bulkUpdateTiles([
-    {
-        wall: "Wall West",
-        tileId: "B12",
-        updates: { value: 100, metadata: { priority: "high" } }
-    },
-    {
-        wall: "Ceiling",
-        tileId: "C7",
-        updates: { value: 75, metadata: { status: "active" } }
-    }
-]);
-
-// Reset a tile
-resetTile("Wall East", "A1");
- */

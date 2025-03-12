@@ -14,19 +14,3 @@ thresholds:
   cpuTemp:
     warning: 60
     critical: 80
-Setup:
-  Tiles:
-    segments: 7
-    rows: 20
-    Wall East:
-      length: 4
-    Wall West:
-      length: 4
-    Ceiling:
-      length: 6
-    Floor:
-      length: 6
-  PDU:
-    count: 5
-  Midspan:
-    count: 7

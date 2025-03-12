@@ -1,0 +1,992 @@
+---
+all:
+  vars:
+    ansible_user: pi
+    ansible_python_interpreter: /usr/bin/python3
+    midspans:
+      midspan-001:
+        hostname : techtile-midspan-01
+        ip : 192.108.0.4
+        type : PD-9624GC
+        label : MS1
+        nr-ports : 24
+      midspan-002:
+        hostname: techtile-midspan-02
+        ip: 192.108.0.5
+        type: PD-9624GC
+        label: MS2
+        nr-ports: 24
+      midspan-003:
+        hostname: techtile-midspan-03
+        ip: 192.108.0.6
+        type: PD-9624GC
+        label: MS3
+        nr-ports: 24
+      midspan-004:
+        hostname: techtile-midspan-04
+        ip: 192.108.0.7
+        type: PD-9624GC
+        label: MS4
+        nr-ports: 24
+      midspan-005:
+        hostname: techtile-midspan-05
+        ip: 192.108.0.8
+        type: PD-9612GC
+        label: MS5
+        nr-ports: 12
+      midspan-006:
+        hostname: techtile-midspan-06
+        ip: 192.108.0.9
+        type: PD-9612GC
+        label: MS6
+        nr-ports: 12
+      midspan-007:
+        hostname: techtile-midspan-07
+        ip: 192.108.0.10
+        type: PD-9612GC
+        label: MS7
+        nr-ports: 12
+      midspan-08:
+        hostname: techtile-midspan-08
+        ip: 192.108.0.11
+        type: PD-9612GC
+        label: MS8
+        nr-ports: 12
+      midspan-009:
+        hostname: techtile-midspan-09
+        ip: 192.108.0.12
+        type: PD-9612GC
+        label: MS9
+        nr-ports: 12
+  hosts:
+    Techtile:
+      ansible_host: techtile-server
+      ip: 192.108.0.1
+      access_ip: 192.108.0.1
+    REF:
+      ansible_host: rpi-ref.local
+    PILOT:
+      ansible_host: rpi-pilot.local
+    T01:
+      ansible_host: rpi-t01.local
+    T02:
+      ansible_host: rpi-t02.local
+    T03:
+      ansible_host: rpi-t03.local
+    T04:
+      ansible_host: rpi-t04.local
+    G01:
+      ansible_host: rpi-g01.local
+      midspan: midspan-004
+      poe-port: 1
+    G02:
+      ansible_host: rpi-g02.local
+      midspan: midspan-004
+      poe-port: 2
+    G03:
+      ansible_host: rpi-g03.local
+      midspan: midspan-004
+      poe-port: 3
+    G04:
+      ansible_host: rpi-g04.local
+      midspan: midspan-004
+      poe-port: 4
+    G05:
+      ansible_host: rpi-g05.local
+      midspan: midspan-005
+      poe-port: 1
+    G06:
+      ansible_host: rpi-g06.local
+      midspan: midspan-005
+      poe-port: 2
+    G07:
+      ansible_host: rpi-g07.local
+      midspan: midspan-005
+      poe-port: 3
+    G08:
+      ansible_host: rpi-g08.local
+      midspan: midspan-005
+      poe-port: 4
+    G09:
+      ansible_host: rpi-g09.local
+      midspan: midspan-005
+      poe-port: 5
+    G10:
+      ansible_host: rpi-g10.local
+      midspan: midspan-005
+      poe-port: 6
+    G11:
+      ansible_host: rpi-g11.local
+      midspan: midspan-005
+      poe-port: 7
+    G12:
+      ansible_host: rpi-g12.local
+      midspan: midspan-005
+      poe-port: 8
+    G13:
+      ansible_host: rpi-g13.local
+      midspan: midspan-005
+      poe-port: 9
+    G14:
+      ansible_hot: rpi-g14.local
+      midspan: midspan-005
+      poe-port: 10
+    G15:
+      ansible_host: rpi-g15.local
+      midspan: midspan-006
+      poe-port: 1
+    G16:
+      ansible_host: rpi-g16.local
+      midspan: midspan-006
+      poe-port: 2
+    G17:
+      ansible_host: rpi-g17.local
+      midspan: midspan-006
+      poe-port: 3
+    G18:
+      ansible_host: rpi-g18.local
+      midspan: midspan-006
+      poe-port: 4
+    G19:
+      ansible_host: rpi-g19.local
+      midspan: midspan-006
+      poe-port: 5
+    G20:
+      ansible_host: rpi-g20.local
+      midspan: midspan-006
+      poe-port: 6
+    F01:
+      ansible_host: rpi-f01.local
+      midspan: midspan-003
+      poe-port: 5
+    F02:
+      ansible_host: rpi-f02.local
+      midspan: midspan-003
+      poe-port: 6
+    F03:
+      ansible_host: rpi-f03.local
+      midspan: midspan-003
+      poe-port: 7
+    F04:
+      ansible_host: rpi-f04.local
+      midspan: midspan-003
+      poe-port: 8
+    F05:
+      ansible_host: rpi-f05.local
+      midspan: midspan-004
+      poe-port: 17
+    F06:
+      ansible_host: rpi-f06.local
+      midspan: midspan-004
+      poe-port: 18
+    F07:
+      ansible_host: rpi-f07.local
+      midspan: midspan-004
+      poe-port: 16
+    F08:
+      ansible_host: rpi-f08.local
+      midspan: midspan-004
+      poe-port: 20
+    F09:
+      ansible_host: rpi-f09.local
+      midspan: midspan-004
+      poe-port: 21
+    F10:
+      ansible_host: rpi-f10.local
+      midspan: midspan-004
+      poe-port: 22
+    F11:
+      ansible_host: rpi-f11.local
+      midspan: midspan-003
+      poe-port: 19
+    F12:
+      ansible_host: rpi-f12.local
+      midspan: midspan-003
+      poe-port: 20
+    F13:
+      ansible_host: rpi-f13.local
+      midspan: midspan-003
+      poe-port: 21
+    F14:
+      ansible_host: rpi-f14.local
+      midspan: midspan-003
+      poe-port: 22
+    F15:
+      ansible_host: rpi-f15.local
+      midspan: midspan-007
+      poe-port: 7
+    F16:
+      ansible_host: rpi-f16.local
+      midspan: midspan-007
+      poe-port: 8
+    F17:
+      ansible_host: rpi-f17.local
+      midspan: midspan-007
+      poe-port: 9
+    F18:
+      ansible_host: rpi-f18.local
+      midspan: midspan-007
+      poe-port: 10
+    F19:
+      ansible_host: rpi-f19.local
+      midspan: midspan-007
+      poe-port: 11
+    F20:
+      ansible_host: rpi-f20.local
+      midspan: midspan-007
+      poe-port: 12
+    E01:
+      ansible_host: rpi-e01.local
+      midspan: midspan-003
+      poe-port: 1
+    E02:
+      ansible_host: rpi-e02.local
+      midspan: midspan-003
+      poe-port: 2
+    E03:
+      ansible_host: rpi-e03.local
+      midspan: midspan-003
+      poe-port: 3
+    E04:
+      ansible_host: rpi-e04.local
+      midspan: midspan-003
+      poe-port: 4
+    E05:
+      ansible_host: rpi-e05.local
+      midspan: midspan-004
+      poe-port: 11
+    E06:
+      ansible_host: rpi-e06.local
+      midspan: midspan-004
+      poe-port: 12
+    E07:
+      ansible_host: rpi-e07.local
+      midspan: midspan-004
+      poe-port: 13
+    E08:
+      ansible_host: rpi-e08.local
+      midspan: midspan-004
+      poe-port: 14
+    E09:
+      ansible_host: rpi-e09.local
+      midspan: midspan-004
+      poe-port: 15
+    E10:
+      ansible_host: rpi-e10.local
+      midspan: midspan-004
+      poe-port: 16
+    E11:
+      ansible_host: rpi-e11.local
+      midspan: midspan-003
+      poe-port: 15
+    E12:
+      ansible_host: rpi-e12.local
+      midspan: midspan-003
+      poe-port: 16
+    E13:
+      ansible_host: rpi-e13.local
+      midspan: midspan-003
+      poe-port: 17
+    E14:
+      ansible_host: rpi-e14.local
+      midspan: midspan-003
+      poe-port: 18
+    E15:
+      ansible_host: rpi-e15.local
+      midspan: midspan-007
+      poe-port: 1
+    E16:
+      ansible_host: rpi-e16.local
+      midspan: midspan-007
+      poe-port: 2
+    E17:
+      ansible_host: rpi-e17.local
+      midspan: midspan-007
+      poe-port: 3
+    E18:
+      ansible_host: rpi-e18.local
+      midspan: midspan-007
+      poe-port: 4
+    E19:
+      ansible_host: rpi-e19.local
+      midspan: midspan-007
+      poe-port: 5
+    E20:
+      ansible_host: rpi-e20.local
+      midspan: midspan-007
+      poe-port: 6
+    D01:
+      ansible_host: rpi-d01.local
+      midspan: midspan-002
+      poe-port: 5
+    D02:
+      ansible_host: rpi-d02.local
+      midspan: midspan-002
+      poe-port: 6
+    D03:
+      ansible_host: rpi-d03.local
+      midspan: midspan-002
+      poe-port: 7
+    D04:
+      ansible_host: rpi-d04.local
+      midspan: midspan-002
+      poe-port: 8
+    D05:
+      ansible_host: rpi-d05.local
+      midspan: midspan-004
+      poe-port: 5
+    D06:
+      ansible_host: rpi-d06.local
+      midspan: midspan-004
+      poe-port: 6
+    D07:
+      ansible_host: rpi-d07.local
+      midspan: midspan-004
+      poe-port: 7
+    D08:
+      ansible_host: rpi-d08.local
+      midspan: midspan-004
+      poe-port: 8
+    D09:
+      ansible_host: rpi-d09.local
+      midspan: midspan-004
+      poe-port: 9
+    D10:
+      ansible_host: rpi-d10.local
+      midspan: midspan-004
+      poe-port: 10
+    D11:
+      ansible_host: rpi-d11.local
+      midspan: midspan-002
+      poe-port: 19
+    D12:
+      ansible_host: rpi-d12.local
+      midspan: midspan-002
+      poe-port: 20
+    D13:
+      ansible_host: rpi-d13.local
+      midspan: midspan-002
+      poe-port: 21
+    D14:
+      ansible_host: rpi-d14.local
+      midspan: midspan-002
+      poe-port: 22
+    D15:
+      ansible_host: rpi-d15.local
+      midspan: midspan-008
+      poe-port: 7
+    D16:
+      ansible_host: rpi-d16.local
+      midspan: midspan-008
+      poe-port: 8
+    D17:
+      ansible_host: rpi-d17.local
+      midspan: midspan-008
+      poe-port: 9
+    D18:
+      ansible_host: rpi-d18.local
+      midspan: midspan-008
+      poe-port: 10
+    D19:
+      ansible_host: rpi-d19.local
+      midspan: midspan-008
+      poe-port: 11
+    D20:
+      ansible_host: rpi-d20.local
+      midspan: midspan-008
+      poe-port: 12
+    C01:
+      ansible_host: rpi-c01.local
+      midspan: midspan-002
+      poe-port: 1
+    C02:
+      ansible_host: rpi-c02.local
+      midspan: midspan-002
+      poe-port: 2
+    C03:
+      ansible_host: rpi-c03.local
+      midspan: midspan-002
+      poe-port: 3
+    C04:
+      ansible_host: rpi-c04.local
+      midspan: midspan-002
+      poe-port: 4
+    C05:
+      ansible_host: rpi-c05.local
+      midspan: midspan-003
+      poe-port: 9
+    C06:
+      ansible_host: rpi-c06.local
+      midspan: midspan-003
+      poe-port: 10
+    C07:
+      ansible_host: rpi-c07.local
+      midspan: midspan-003
+      poe-port: 11
+    C08:
+      ansible_host: rpi-c08.local
+      midspan: midspan-003
+      poe-port: 12
+    C09:
+      ansible_host: rpi-c09.local
+      midspan: midspan-003
+      poe-port: 13
+    C10:
+      ansible_host: rpi-c10.local
+      midspan: midspan-003
+      poe-port: 14
+    C11:
+      ansible_host: rpi-c11.local
+      midspan: midspan-002
+      poe-port: 15
+    C12:
+      ansible_host: rpi-c12.local
+      midspan: midspan-002
+      poe-port: 16
+    C13:
+      ansible_host: rpi-c13.local
+      midspan: midspan-002
+      poe-port: 17
+    C14:
+      ansible_host: rpi-c14.local
+      midspan: midspan-002
+      poe-port: 18
+    C15:
+      ansible_host: rpi-c15.local
+      midspan: midspan-008
+      poe-port: 1
+    C16:
+      ansible_host: rpi-c16.local
+      midspan: midspan-008
+      poe-port: 2
+    C17:
+      ansible_host: rpi-c17.local
+      midspan: midspan-008
+      poe-port: 3
+    C18:
+      ansible_host: rpi-c18.local
+      midspan: midspan-008
+      poe-port: 4
+    C19:
+      ansible_host: rpi-c19.local
+      midspan: midspan-008
+      poe-port: 5
+    C20:
+      ansible_host: rpi-c20.local
+      midspan: midspan-008
+      poe-port: 6
+    B01:
+      ansible_host: rpi-b01.local
+      midspan: midspan-001
+      poe-port: 5
+    B02:
+      ansible_host: rpi-b02.local
+      midspan: midspan-001
+      poe-port: 6
+    B03:
+      ansible_host: rpi-b03.local
+      midspan: midspan-001
+      poe-port: 7
+    B04:
+      ansible_host: rpi-b04.local
+      midspan: midspan-001
+      poe-port: 8
+    B05:
+      ansible_host: rpi-b05.local
+      midspan: midspan-002
+      poe-port: 9
+    B06:
+      ansible_host: rpi-b06.local
+      midspan: midspan-002
+      poe-port: 10
+    B07:
+      ansible_host: rpi-b07.local
+      midspan: midspan-002
+      poe-port: 11
+    B08:
+      ansible_host: rpi-b08.local
+      midspan: midspan-002
+      poe-port: 12
+    B09:
+      ansible_host: rpi-b09.local
+      midspan: midspan-002
+      poe-port: 13
+    B10:
+      ansible_host: rpi-b10.local
+      midspan: midspan-002
+      poe-port: 14
+    B11:
+      ansible_host: rpi-b11.local
+      midspan: midspan-001
+      poe-port: 19
+    B12:
+      ansible_host: rpi-b12.local
+      midspan: midspan-001
+      poe-port: 20
+    B13:
+      ansible_host: rpi-b13.local
+      midspan: midspan-001
+      poe-port: 21
+    B14:
+      ansible_host: rpi-b14.local
+      midspan: midspan-001
+      poe-port: 22
+    B15:
+      ansible_host: rpi-b15.local
+      midspan: midspan-009
+      poe-port: 7
+    B16:
+      ansible_host: rpi-b16.local
+      midspan: midspan-009
+      poe-port: 8
+    B17:
+      ansible_host: rpi-b17.local
+      midspan: midspan-009
+      poe-port: 9
+    B18:
+      ansible_host: rpi-b18.local
+      midspan: midspan-009
+      poe-port: 10
+    B19:
+      ansible_host: rpi-b19.local
+      midspan: midspan-009
+      poe-port: 11
+    B20:
+      ansible_host: rpi-b20.local
+      midspan: midspan-009
+      poe-port: 12
+    A01:
+      ansible_host: rpi-a01.local
+      midspan: midspan-001
+      poe-port: 1
+    A02:
+      ansible_host: rpi-a02.local
+      midspan: midspan-001
+      poe-port: 2
+    A03:
+      ansible_host: rpi-a03.local
+      midspan: midspan-001
+      poe-port: 3
+    A04:
+      ansible_host: rpi-a04.local
+      midspan: midspan-001
+      poe-port: 4
+    A05:
+      ansible_host: rpi-a05.local
+      midspan: midspan-001
+      poe-port: 9
+    A06:
+      ansible_host: rpi-a06.local
+      midspan: midspan-001
+      poe-port: 10
+    A07:
+      ansible_host: rpi-a07.local
+      midspan: midspan-001
+      poe-port: 11
+    A08:
+      ansible_host: rpi-a08.local
+      midspan: midspan-001
+      poe-port: 12
+    A09:
+      ansible_host: rpi-a09.local
+      midspan: midspan-001
+      poe-port: 13
+    A10:
+      ansible_host: rpi-a10.local
+      midspan: midspan-001
+      poe-port: 14
+    A11:
+      ansible_host: rpi-a11.local
+      midspan: midspan-001
+      poe-port: 15
+    A12:
+      ansible_host: rpi-a12.local
+      midspan: midspan-001
+      poe-port: 16
+    A13:
+      ansible_host: rpi-a13.local
+      midspan: midspan-001
+      poe-port: 17
+    A14:
+      ansible_host: rpi-a14.local
+      midspan: midspan-001
+      poe-port: 18
+    A15:
+      ansible_host: rpi-a15.local
+      midspan: midspan-009
+      poe-port: 1
+    A16:
+      ansible_host: rpi-a16.local
+      midspan: midspan-009
+      poe-port: 2
+    A17:
+      ansible_host: rpi-a17.local
+      midspan: midspan-009
+      poe-port: 3
+    A18:
+      ansible_host: rpi-a18.local
+      midspan: midspan-009
+      poe-port: 4
+    A19:
+      ansible_host: rpi-a19.local
+      midspan: midspan-009
+      poe-port: 6
+    A20:
+      ansible_host: rpi-a20.local
+      midspan: midspan-009
+      poe-port: 5
+  children:
+    server:
+      vars:
+        ansible_user: haorui
+      hosts:
+        Techtile:
+    tests:
+      hosts:
+        T01:
+        T02:
+        T03:
+        T04:
+    multiON:
+      hosts:
+        A05:
+        G10:
+    #        G05:
+    #        G06:
+    #        G07:
+    #        G08:
+    #        G09:
+    #        G10:
+    #        T01:
+    #        T02:
+    #        G01:
+    #        G02:
+    #        A01:
+    #        B01:
+    #        C01:
+    #        D01:
+    #        E01:
+    #        F01:
+    #        G01:
+    #        A11:
+    #        B11:
+    #        C11:
+    #        D11:
+    #        E12:
+    #        F11:
+    #        G11:
+    fail:
+      hosts:
+    wallEast:
+      hosts:
+        G01:
+        G02:
+        G03:
+        G04:
+        F01:
+        F02:
+        F03:
+        F04:
+        E01:
+        E02:
+        E03:
+        E04:
+        D01:
+        D02:
+        D03:
+        D04:
+        C01:
+        C02:
+        C03:
+        C04:
+        B01:
+        B02:
+        B03:
+        B04:
+        A01:
+        A02:
+        A03:
+        A04:
+    wallWest:
+      hosts:
+        A11:
+        A12:
+        A13:
+        A14:
+        B11:
+        B12:
+        B13:
+        B14:
+        C11:
+        C12:
+        C13:
+        C14:
+        D11:
+        D12:
+        D13:
+        D14:
+        E11:
+        E12:
+        E13:
+        E14:
+        F11:
+        F12:
+        F13:
+        F14:
+        G11:
+        G12:
+        G13:
+        G14:
+    floor:
+      hosts:
+        A15:
+        A16:
+        A17:
+        A18:
+        A19:
+        A20:
+        B15:
+        B16:
+        B17:
+        B18:
+        B19:
+        B20:
+        C15:
+        C16:
+        C17:
+        C18:
+        C19:
+        C20:
+        D15:
+        D16:
+        D17:
+        D18:
+        D19:
+        D20:
+        E15:
+        E16:
+        E17:
+        E18:
+        E19:
+        E20:
+        F15:
+        F16:
+        F17:
+        F18:
+        F19:
+        F20:
+        G15:
+        G16:
+        G17:
+        G18:
+        G19:
+        G20:
+    ceiling:
+      hosts:
+        A05:
+        A06:
+        A07:
+        A08:
+        A09:
+        A10:
+        B05:
+        B06:
+        B07:
+        B08:
+        B09:
+        B10:
+        C05:
+        C06:
+        C07:
+        C08:
+        C09:
+        C10:
+        D05:
+        D06:
+        D07:
+        D08:
+        D09:
+        D10:
+        E05:
+        E06:
+        E07:
+        E08:
+        E09:
+        E10:
+        F05:
+        F06:
+        F07:
+        F08:
+        F09:
+        F10:
+        G05:
+        G06:
+        G07:
+        G08:
+        G09:
+        G10:
+    segmentA:
+      hosts:
+        A01:
+        A02:
+        A03:
+        A04:
+        A05:
+        A06:
+        A07:
+        A08:
+        A09:
+        A10:
+        A11:
+        A12:
+        A13:
+        A14:
+        A15:
+        A16:
+        A17:
+        A18:
+        A19:
+        A20:
+    segmentB:
+      hosts:
+        B01:
+        B02:
+        B03:
+        B04:
+        B05:
+        B06:
+        B07:
+        B08:
+        B09:
+        B10:
+        B11:
+        B12:
+        B13:
+        B14:
+        B15:
+        B16:
+        B17:
+        B18:
+        B19:
+        B20:
+    segmentC:
+      hosts:
+        C01:
+        C02:
+        C03:
+        C04:
+        C05:
+        C06:
+        C07:
+        C08:
+        C09:
+        C10:
+        C11:
+        C12:
+        C13:
+        C14:
+        C15:
+        C16:
+        C17:
+        C18:
+        C19:
+        C20:
+    segmentD:
+      hosts:
+        D01:
+        D02:
+        D03:
+        D04:
+        D05:
+        D06:
+        D07:
+        D08:
+        D09:
+        D10:
+        D11:
+        D12:
+        D13:
+        D14:
+        D15:
+        D16:
+        D17:
+        D18:
+        D19:
+        D20:
+    segmentE:
+      hosts:
+        E01:
+        E02:
+        E03:
+        E04:
+        E05:
+        E06:
+        E07:
+        E08:
+        E09:
+        E10:
+        E11:
+        E12:
+        E13:
+        E14:
+        E15:
+        E16:
+        E17:
+        E18:
+        E19:
+        E20:
+    segmentF:
+      hosts:
+        F01:
+        F02:
+        F03:
+        F04:
+        F05:
+        F06:
+        F07:
+        F08:
+        F09:
+        F10:
+        F11:
+        F12:
+        F13:
+        F14:
+        F15:
+        F16:
+        F17:
+        F18:
+        F19:
+        F20:
+    segmentG:
+      hosts:
+        G01:
+        G02:
+        G03:
+        G04:
+        G05:
+        G06:
+        G07:
+        G08:
+        G09:
+        G10:
+        G11:
+        G12:
+        G13:
+        G14:
+        G15:
+        G16:
+        G17:
+        G18:
+        G19:
+        G20:
+    rpis:
+      children:
+        wallEast:
+        wallWest:
+        floor:
+        ceiling:
+    walls:
+      children:
+        wallEast:
+        wallWest:
+

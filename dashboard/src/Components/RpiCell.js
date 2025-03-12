@@ -3,7 +3,7 @@ import React from "react";
 import { Card, Button, Modal } from "antd";
 import { useState } from "react";
 
-const RpiCell = ({ tile, wallName, updateTile }) => {
+const RpiCell = ({ tile, wallName }) => {
     const [modalOpen, setModalOpen] = useState(false);
 
     const openModal = () => setModalOpen(true);
@@ -36,7 +36,7 @@ const RpiCell = ({ tile, wallName, updateTile }) => {
                     <p>Active Status: {tile.isActive ? "Active" : "Inactive"}</p>
                     <p>Metadata: {JSON.stringify(tile.metadata)}</p>
                     <Button onClick={() => {
-                        updateTile(tile.wall, tile.id, { isActive: !tile.isActive });
+                        //updateTile(tile.wall, tile.id, { isActive: !tile.isActive });
                         closeModal();
                     }}>
                         Toggle Tile Status
