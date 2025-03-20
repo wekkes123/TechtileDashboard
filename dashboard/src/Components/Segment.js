@@ -1,7 +1,9 @@
 import React from "react";
 import RpiCell from "./RpiCell";
+import {Button, Switch} from "antd";
+import { PoweroffOutlined } from "@ant-design/icons";
 
-const Segment = ({ segmentLabel, segmentData, updateTile }) => {
+const Segment = ({ segmentLabel, segmentData, updateTile, toggleSegment }) => {
     if (!segmentData || !segmentData.tiles) {
         return <div>Loading {segmentLabel}...</div>;
     }
@@ -14,22 +16,45 @@ const Segment = ({ segmentLabel, segmentData, updateTile }) => {
     const rows = [...new Set(tileKeys.map(key => key.slice(1)))].sort();
     const cellsPerRow = Math.ceil(rows.length / 2 - 1);
 
+    const setSegmentStatus = (status) => {
+        Object.keys(tiles).forEach(tileId => {
+            updateTile(tileId, { status });
+        });
+    };
+
     return (
-        <div style={{marginBottom: "20px"}}>
+        <div style={{marginBottom: "20px", border: "1px solid #ddd", padding: "10px", borderRadius: "8px"}}>
             <h2 style={{textAlign: "center"}}>{segmentLabel}</h2>
+
+            <div style={{
+                textAlign: "center",
+                marginBottom: "10px",
+                display: "flex",
+                justifyContent: "center",
+                gap: "10px"
+            }}>
+                <Button type="primary" onClick={() => setSegmentStatus("working")} style={{backgroundColor: "green"}}>
+                    Turn All On
+                </Button>
+                <Button danger onClick={() => setSegmentStatus("deactivated")}>
+                    Turn All Off
+                </Button>
+            </div>
+
 
             <div
                 style={{
                     display: "grid",
                     gridTemplateColumns: "repeat(10, 1fr)", // 10 columns per row
-                    gridAutoRows: "1fr", // Ensures even row heights
+                    gridAutoRows: "1fr",
                     gap: "10px",
-                    justifyItems: "center"
+                    justifyItems: "center",
+                    opacity: segmentData.active ? 1 : 0.5, // Dim grid when inactive
                 }}
             >
                 {rows.reduce((result, rowLabel, index) => {
                     if (index % cellsPerRow === 0) {
-                        result.push([]); // Start a new row group every `cellsPerRow` rows
+                        result.push([]);
                     }
                     result[result.length - 1].push(rowLabel);
                     return result;
@@ -45,9 +70,10 @@ const Segment = ({ segmentLabel, segmentData, updateTile }) => {
                                             tile={tiles[tileKey]}
                                             wallName={segmentLabel}
                                             updateTile={updateTile}
+                                            disabled={!segmentData.active} // Disable tiles if inactive
                                         />
                                     ) : (
-                                        <div key={tileKey} style={{ height: "40px" }}></div>
+                                        <div key={tileKey} style={{height: "40px"}}></div>
                                     );
                                 })}
                             </React.Fragment>

@@ -289,27 +289,24 @@ const Dashboard = () => {
                     </div>
                 </Header>
                 <Content style={{ padding: "16px", display: "grid", gridTemplateColumns: "1fr 1fr", gap: "40px" }}>
-                    {viewMode === "walls" ? (
-                        Object.entries(walls).map(([wallName, wallData]) => (
+                    {viewMode === "walls"
+                        ? Object.entries(walls).map(([wallName, wallData]) => (
                             <Wall
                                 key={wallName}
                                 wallName={wallName}
                                 wallData={wallData}
                                 updateTile={updateTile}
-                                resetTile={resetTile}
                             />
                         ))
-                    ) : (
-                        Object.entries(segments).map(([segmentLabel, segmentData]) => (
+                        : Object.entries(segments).map(([segmentLabel, segmentData]) => (
                             <Segment
                                 key={segmentLabel}
                                 segmentLabel={segmentLabel}
                                 segmentData={segmentData}
                                 updateTile={updateTile}
-                                resetTile={resetTile}
                             />
                         ))
-                    )}
+                    }
                 </Content>
             </Layout>
 
