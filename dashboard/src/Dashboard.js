@@ -77,10 +77,38 @@ const Dashboard = () => {
     const [midspans, setMidspans] = useState({});
     const [wallNames, setWallNames] = useState({});
     const [open, setOpen] = useState(false);
-    const [viewMode, setViewMode] = useState("walls");
+    const [viewMode, setViewMode] = useState("walls")
+    const [visibleItems, setVisibleItems] = useState([]);
 
     // Initialize tiles state with useReducer
     const [tiles, dispatchTiles] = useReducer(tilesReducer, {});
+
+
+    const getTilesByCategory = (categoryType) => {
+        console.log(`Organizing tiles for ${categoryType}...`);
+        const categorizedTiles = {};
+
+        Object.entries(tiles).forEach(([tileId, tileData]) => {
+            const parents = categoryType === "walls" ? tileData.walls : tileData.segments;
+
+            parents.forEach((parent) => {
+                if (!categorizedTiles[parent]) categorizedTiles[parent] = { tiles: {} };
+                categorizedTiles[parent].tiles[tileId] = tileData;
+            });
+        });
+
+        // Sort the categories alphabetically before returning
+        const sortedCategories = Object.keys(categorizedTiles).sort().reduce((acc, key) => {
+            acc[key] = categorizedTiles[key];
+            return acc;
+        }, {});
+
+        console.log(`${categoryType} organized:`, sortedCategories);
+        return sortedCategories;
+    };
+
+    const walls = getTilesByCategory("walls");
+    const segments = getTilesByCategory("segments");
 
     useEffect(() => {
         fetchHosts()
@@ -137,6 +165,15 @@ const Dashboard = () => {
             .catch((error) => console.error("Failed to load hosts.yaml:", error));
     }, []);
 
+
+    useEffect(() => {
+        if (visibleItems.length === 0) {
+            const newItems = viewMode === "walls" ? Object.keys(walls) : Object.keys(segments);
+            setVisibleItems(newItems);
+        }
+    }, [viewMode, walls, segments]);
+
+
     // Function to update a single tile
     const updateTile = (tileId, updates) => {
         dispatchTiles({
@@ -188,32 +225,6 @@ const Dashboard = () => {
             bulkUpdateTiles(updates);
         }
     };
-
-    const getTilesByCategory = (categoryType) => {
-        console.log(`Organizing tiles for ${categoryType}...`);
-        const categorizedTiles = {};
-
-        Object.entries(tiles).forEach(([tileId, tileData]) => {
-            const parents = categoryType === "walls" ? tileData.walls : tileData.segments;
-
-            parents.forEach((parent) => {
-                if (!categorizedTiles[parent]) categorizedTiles[parent] = { tiles: {} };
-                categorizedTiles[parent].tiles[tileId] = tileData;
-            });
-        });
-
-        // Sort the categories alphabetically before returning
-        const sortedCategories = Object.keys(categorizedTiles).sort().reduce((acc, key) => {
-            acc[key] = categorizedTiles[key];
-            return acc;
-        }, {});
-
-        console.log(`${categoryType} organized:`, sortedCategories);
-        return sortedCategories;
-    };
-
-    const walls = getTilesByCategory("walls");
-    const segments = getTilesByCategory("segments");
 
     const handleMessage = (data) => {
         try {
@@ -290,23 +301,16 @@ const Dashboard = () => {
                 </Header>
                 <Content style={{ padding: "16px", display: "grid", gridTemplateColumns: "1fr 1fr", gap: "40px" }}>
                     {viewMode === "walls"
-                        ? Object.entries(walls).map(([wallName, wallData]) => (
-                            <Wall
-                                key={wallName}
-                                wallName={wallName}
-                                wallData={wallData}
-                                updateTile={updateTile}
-                            />
-                        ))
-                        : Object.entries(segments).map(([segmentLabel, segmentData]) => (
-                            <Segment
-                                key={segmentLabel}
-                                segmentLabel={segmentLabel}
-                                segmentData={segmentData}
-                                updateTile={updateTile}
-                            />
-                        ))
-                    }
+                        ? Object.entries(walls)
+                            .filter(([name]) => visibleItems.includes(name))  // Only show checked walls
+                            .map(([wallName, wallData]) => (
+                                <Wall key={wallName} wallName={wallName} wallData={wallData} updateTile={updateTile} />
+                            ))
+                        : Object.entries(segments)
+                            .filter(([name]) => visibleItems.includes(name))  // Only show checked segments
+                            .map(([segmentLabel, segmentData]) => (
+                                <Segment key={segmentLabel} segmentLabel={segmentLabel} segmentData={segmentData} updateTile={updateTile} />
+                            ))}
                 </Content>
             </Layout>
 
@@ -315,6 +319,10 @@ const Dashboard = () => {
                 onClose={() => setOpen(false)}
                 viewMode={viewMode}
                 setViewMode={setViewMode}
+                wallNames={walls}
+                segmentNames={segments}
+                visibleItems={visibleItems}
+                setVisibleItems={setVisibleItems}
             />
 
             <Footer><InfoBar/></Footer>
