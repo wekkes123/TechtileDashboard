@@ -46,7 +46,7 @@ const tilesReducer = (state, action) => {
                     ...state[action.payload.tileId],
                     value: 0,
                     metadata: {},
-                    isActive: true
+                    status: "working" // Changed from isActive: true
                 }
             };
 
@@ -64,7 +64,7 @@ function generateTiles(wallOrSegmentName, cellData) {
             col: key.charAt(0),
             value: 0,
             metadata: {},
-            isActive: true,
+            status: "working", // Changed from isActive: true
             walls: new Set(),
             segments: new Set(),
         };
@@ -169,7 +169,21 @@ const Dashboard = () => {
         reactivateAllTiles: () => {
             const updates = Object.keys(tiles).map(tileId => ({
                 tileId,
-                updates: { isActive: true }
+                updates: { status: "working" } // Changed from isActive: true
+            }));
+            bulkUpdateTiles(updates);
+        },
+        setAllFaulty: () => {
+            const updates = Object.keys(tiles).map(tileId => ({
+                tileId,
+                updates: { status: "faulty" }
+            }));
+            bulkUpdateTiles(updates);
+        },
+        setAllDeactivated: () => {
+            const updates = Object.keys(tiles).map(tileId => ({
+                tileId,
+                updates: { status: "deactivated" }
             }));
             bulkUpdateTiles(updates);
         }
@@ -207,7 +221,8 @@ const Dashboard = () => {
             if (tiles[data.id]) {
                 updateTile(data.id, {
                     value: Math.round(parseFloat(data.temp)),
-                    isActive: data.status === "1"
+                    // Map the old status "1" to "working" and "0" to "deactivated"
+                    status: data.status === "1" ? "working" : "deactivated"
                 });
             } else {
                 console.warn(`No tile found for ID: ${data.id}`);
@@ -257,7 +272,19 @@ const Dashboard = () => {
                             type="primary"
                             style={{backgroundColor: "green"}}
                         >
-                            Reactivate All Tiles
+                            Set All Working
+                        </Button>
+                        <Button
+                            onClick={debugFunctions.setAllFaulty}
+                            danger
+                        >
+                            Set All Faulty
+                        </Button>
+                        <Button
+                            onClick={debugFunctions.setAllDeactivated}
+                            style={{backgroundColor: "#d9d9d9", color: "rgba(0,0,0,0.65)"}}
+                        >
+                            Deactivate All
                         </Button>
                     </div>
                 </Header>
