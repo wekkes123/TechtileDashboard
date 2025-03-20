@@ -16,72 +16,210 @@ async function fetchHosts() {
     return yaml.load(text);
 }
 
-function generateTiles(wallName, wallData) {
+// Tiles reducer for state management
+const tilesReducer = (state, action) => {
+    switch (action.type) {
+        case 'UPDATE_TILE':
+            const { tileId, updates } = action.payload;
+            return {
+                ...state,
+                [tileId]: {
+                    ...state[tileId],
+                    ...updates
+                }
+            };
+
+        case 'BULK_UPDATE_TILES':
+            const updatedState = { ...state };
+            action.payload.forEach(({ tileId, updates }) => {
+                updatedState[tileId] = {
+                    ...updatedState[tileId],
+                    ...updates
+                };
+            });
+            return updatedState;
+
+        case 'RESET_TILE':
+            return {
+                ...state,
+                [action.payload.tileId]: {
+                    ...state[action.payload.tileId],
+                    value: 0,
+                    metadata: {},
+                    isActive: true
+                }
+            };
+
+        default:
+            return state;
+    }
+};
+
+function generateTiles(wallOrSegmentName, cellData) {
     const tiles = {};
-    Object.keys(wallData).forEach((key) => {
+    Object.keys(cellData).forEach((key) => {
         tiles[key] = {
             id: key,
-            wall: wallName,
             row: key.slice(1),
             col: key.charAt(0),
             value: 0,
             metadata: {},
             isActive: true,
+            walls: new Set(),
+            segments: new Set(),
         };
     });
     return tiles;
 }
 
 const Dashboard = () => {
-    const [fetchedData, setFetchedData] = useState({})
     const [rpiCells, setRpiCells] = useState({});
     const [midspans, setMidspans] = useState({});
     const [wallNames, setWallNames] = useState({});
-    const [segments, setSegments] = useState({})
-    const [walls, setWalls] = useState({})
     const [open, setOpen] = useState(false);
     const [viewMode, setViewMode] = useState("walls");
+
+    // Initialize tiles state with useReducer
+    const [tiles, dispatchTiles] = useReducer(tilesReducer, {});
 
     useEffect(() => {
         fetchHosts()
             .then((data) => {
-                setFetchedData(data.all);
+                if (!data || !data.all) return;
+
+                console.log("Fetched YAML data:", data);
+
+                const allCells = {};
+                const midspanConfig = data.all.vars.midspans
+                const fetchedWallNames = data.all.children.rpis.children;
+
+                // Process walls and segments using the same base cell data
+                Object.entries(data.all.children).forEach(([key, cellData]) => {
+                    if (!cellData.hosts) return;
+
+                    console.log(`Processing ${key}:`, cellData.hosts);
+                    const newTiles = generateTiles(key, cellData.hosts);
+
+                    Object.entries(newTiles).forEach(([cellKey, cellInfo]) => {
+                        if (!allCells[cellKey]) {
+                            allCells[cellKey] = { ...cellInfo, walls: new Set(), segments: new Set() };
+                        }
+
+                        if (key.startsWith("segment")) {
+                            allCells[cellKey].segments.add(key);
+                        } else if (key in fetchedWallNames) {
+                            allCells[cellKey].walls.add(key);
+                        }
+                    });
+                });
+
+                // Convert sets to arrays for easier rendering
+                Object.keys(allCells).forEach((cellKey) => {
+                    allCells[cellKey].walls = Array.from(allCells[cellKey].walls);
+                    allCells[cellKey].segments = Array.from(allCells[cellKey].segments);
+                });
+
+                console.log("Final processed rpiCells:", allCells);
+
+                // Initialize the tiles state with the processed cells
+                dispatchTiles({
+                    type: 'BULK_UPDATE_TILES',
+                    payload: Object.entries(allCells).map(([tileId, tileData]) => ({
+                        tileId,
+                        updates: tileData
+                    }))
+                });
+
+                setRpiCells(allCells);
+                setMidspans(midspanConfig);
+                setWallNames(fetchedWallNames);
             })
             .catch((error) => console.error("Failed to load hosts.yaml:", error));
     }, []);
 
-    useEffect(() => {
-        if (!fetchedData || Object.keys(fetchedData).length === 0) {
-            console.log(fetchedData)
-            console.warn("Data is undefined or empty, skipping iteration.");
-            return;
+    // Function to update a single tile
+    const updateTile = (tileId, updates) => {
+        dispatchTiles({
+            type: 'UPDATE_TILE',
+            payload: { tileId, updates }
+        });
+        message.success(`Updated tile ${tileId}`);
+    };
+
+    // Function to bulk update tiles
+    const bulkUpdateTiles = (updates) => {
+        dispatchTiles({
+            type: 'BULK_UPDATE_TILES',
+            payload: updates
+        });
+        message.success(`Bulk updated ${updates.length} tiles`);
+    };
+
+    // Function to reset a tile
+    const resetTile = (tileId) => {
+        dispatchTiles({
+            type: 'RESET_TILE',
+            payload: { tileId }
+        });
+        message.info(`Reset tile ${tileId}`);
+    };
+
+    // Debug functions for testing
+    const debugFunctions = {
+        reactivateAllTiles: () => {
+            const updates = Object.keys(tiles).map(tileId => ({
+                tileId,
+                updates: { isActive: true }
+            }));
+            bulkUpdateTiles(updates);
         }
+    };
 
-        setRpiCells(fetchedData.hosts);
-        setMidspans(fetchedData.vars.midspans);
-        setWallNames(fetchedData.children.rpis.children);
+    const getTilesByCategory = (categoryType) => {
+        console.log(`Organizing tiles for ${categoryType}...`);
+        const categorizedTiles = {};
 
-        const extractedWalls = {};
-        const extractedSegments = {};
+        Object.entries(tiles).forEach(([tileId, tileData]) => {
+            const parents = categoryType === "walls" ? tileData.walls : tileData.segments;
 
-        Object.keys(fetchedData.children).forEach((key) => {
-            if (key.startsWith("segment")) {
-                extractedSegments[key] = {
-                    tiles: generateTiles(key, fetchedData.children[key].hosts),
-                };
-            }
-            else if (key in wallNames) {
-                extractedWalls[key] = {
-                    tiles: generateTiles(key, fetchedData.children[key].hosts),
-                };
-            }
+            parents.forEach((parent) => {
+                if (!categorizedTiles[parent]) categorizedTiles[parent] = { tiles: {} };
+                categorizedTiles[parent].tiles[tileId] = tileData;
+            });
         });
 
-        setWalls(extractedWalls);
-        setSegments(extractedSegments);
-        console.log(extractedSegments)
+        // Sort the categories alphabetically before returning
+        const sortedCategories = Object.keys(categorizedTiles).sort().reduce((acc, key) => {
+            acc[key] = categorizedTiles[key];
+            return acc;
+        }, {});
 
-    }, [fetchedData]);
+        console.log(`${categoryType} organized:`, sortedCategories);
+        return sortedCategories;
+    };
+
+    const walls = getTilesByCategory("walls");
+    const segments = getTilesByCategory("segments");
+
+    const handleMessage = (data) => {
+        try {
+            // Find the tile by ID
+            if (tiles[data.id]) {
+                updateTile(data.id, {
+                    value: Math.round(parseFloat(data.temp)),
+                    isActive: data.status === "1"
+                });
+            } else {
+                console.warn(`No tile found for ID: ${data.id}`);
+            }
+        } catch (error) {
+            console.error("Error processing data:", error);
+        }
+    };
+
+    useEffect(() => {
+        generateMockData(handleMessage);
+    }, []);
 
     return (
         <Layout style={{minHeight: "100vh", display: "flex"}}>
@@ -108,22 +246,52 @@ const Dashboard = () => {
                             Settings
                         </Button>
                     </div>
+                    <div style={{
+                        display: "flex",
+                        justifyContent: "center",
+                        gap: "10px",
+                        marginTop: "10px"
+                    }}>
+                        <Button
+                            onClick={debugFunctions.reactivateAllTiles}
+                            type="primary"
+                            style={{backgroundColor: "green"}}
+                        >
+                            Reactivate All Tiles
+                        </Button>
+                    </div>
                 </Header>
                 <Content style={{ padding: "16px", display: "grid", gridTemplateColumns: "1fr 1fr", gap: "40px" }}>
                     {viewMode === "walls" ? (
                         Object.entries(walls).map(([wallName, wallData]) => (
-                            <Wall key={wallName} wallName={wallName} wallData={wallData} />
+                            <Wall
+                                key={wallName}
+                                wallName={wallName}
+                                wallData={wallData}
+                                updateTile={updateTile}
+                                resetTile={resetTile}
+                            />
                         ))
                     ) : (
                         Object.entries(segments).map(([segmentLabel, segmentData]) => (
-                            <Segment key={segmentLabel} segmentLabel={segmentLabel} segmentData={segmentData} />
+                            <Segment
+                                key={segmentLabel}
+                                segmentLabel={segmentLabel}
+                                segmentData={segmentData}
+                                updateTile={updateTile}
+                                resetTile={resetTile}
+                            />
                         ))
                     )}
                 </Content>
-
             </Layout>
 
-            <ControlPanel open={open} onClose={() => setOpen(false)} viewMode={viewMode} setViewMode={setViewMode} />
+            <ControlPanel
+                open={open}
+                onClose={() => setOpen(false)}
+                viewMode={viewMode}
+                setViewMode={setViewMode}
+            />
 
             <Footer><InfoBar/></Footer>
         </Layout>

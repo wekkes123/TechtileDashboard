@@ -1,9 +1,7 @@
 import React from "react";
 import RpiCell from "./RpiCell";
 
-const Wall = ({ wallName, wallData }) => {
-    console.log(`Wall component received data for: ${wallName}`, wallData);
-
+const Wall = ({ wallName, wallData, updateTile }) => {
     if (!wallData || !wallData.tiles) {
         return <div>Loading {wallName}...</div>;
     }
@@ -42,7 +40,16 @@ const Wall = ({ wallName, wallData }) => {
                         </div>
                         {cols.map((colLabel) => {
                             const tileKey = `${colLabel}${rowLabel}`;
-                            return <RpiCell key={tileKey} tile={tiles[tileKey]} wallName={wallName} />;
+                            return tiles[tileKey] ? (
+                                <RpiCell
+                                    key={tileKey}
+                                    tile={tiles[tileKey]}
+                                    wallName={wallName}
+                                    updateTile={updateTile}
+                                />
+                            ) : (
+                                <div key={tileKey} style={{ height: "40px" }}></div>
+                            );
                         })}
                     </React.Fragment>
                 ))}

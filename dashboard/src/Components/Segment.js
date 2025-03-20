@@ -1,7 +1,7 @@
 import React from "react";
 import RpiCell from "./RpiCell";
 
-const Segment = ({ segmentLabel, segmentData }) => {
+const Segment = ({ segmentLabel, segmentData, updateTile }) => {
     if (!segmentData || !segmentData.tiles) {
         return <div>Loading {segmentLabel}...</div>;
     }
@@ -13,8 +13,6 @@ const Segment = ({ segmentLabel, segmentData }) => {
     const cols = [...new Set(tileKeys.map(key => key.charAt(0)))].sort();
     const rows = [...new Set(tileKeys.map(key => key.slice(1)))].sort();
     const cellsPerRow = Math.ceil(rows.length / 2 - 1);
-
-    console.log("cols, rows:", cols, rows, "Cells per row:", cellsPerRow);
 
     return (
         <div style={{marginBottom: "20px"}}>
@@ -41,8 +39,15 @@ const Segment = ({ segmentLabel, segmentData }) => {
                             <React.Fragment key={rowLabel}>
                                 {cols.map((colLabel) => {
                                     const tileKey = `${colLabel}${rowLabel}`;
-                                    return (
-                                        <RpiCell key={tileKey} tile={tiles[tileKey]} wallName={segmentLabel}/>
+                                    return tiles[tileKey] ? (
+                                        <RpiCell
+                                            key={tileKey}
+                                            tile={tiles[tileKey]}
+                                            wallName={segmentLabel}
+                                            updateTile={updateTile}
+                                        />
+                                    ) : (
+                                        <div key={tileKey} style={{ height: "40px" }}></div>
                                     );
                                 })}
                             </React.Fragment>
@@ -51,7 +56,6 @@ const Segment = ({ segmentLabel, segmentData }) => {
                 ))}
             </div>
         </div>
-
     );
 };
 
