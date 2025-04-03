@@ -64,7 +64,8 @@ function generateTiles(wallOrSegmentName, cellData) {
             col: key.charAt(0),
             value: 0,
             metadata: {},
-            status: "working", // Changed from isActive: true
+            data: {},
+            status: "working",
             walls: new Set(),
             segments: new Set(),
         };
@@ -235,20 +236,36 @@ const Dashboard = () => {
 
     const handleMessage = (data) => {
         try {
-            // Find the tile by ID
+            if (!data || typeof data !== "object") {
+                console.warn("Received invalid data:", data);
+                return;
+            }
+
             if (tilesRef.current[data.id]) {
-                updateTile(data.id, {
-                    value: Math.round(parseFloat(data.temp)),
-                    // Map the old status "1" to "working" and "0" to "faulty"
-                    status: data.status === "1" ? "working" : "faulty"
+                let metaData = {};
+
+                Object.entries(data).forEach(([dataId, value]) => {
+                    if (dataId === "status") {
+                        updateTile(data.id, {
+                            status: value === "1" ? "working" : "faulty"
+                        });
+                    } else if (dataId !== "id") {
+                        metaData[dataId] = value;
+                    }
                 });
+
+                updateTile(data.id, {
+                    data: metaData,
+                });
+
             } else {
-                console.warn(`No tile found for ID: ${data.id}`);
+                console.warn(`No tile found for ID: ${data?.id}`);
             }
         } catch (error) {
             console.error("Error processing data:", error);
         }
     };
+
 
     useEffect(() => {
         generateMockData(handleMessage);

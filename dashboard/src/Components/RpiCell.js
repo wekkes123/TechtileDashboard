@@ -52,7 +52,7 @@ const RpiCell = ({ tile, wallName, updateTile }) => {
                     cursor: "pointer"
                 }}
             >
-                {tile.id} ({tile.value})
+                {tile.id} ({tile.data.temp}°)
             </Card>
             <Modal
                 title={`Tile: ${tile.id}`}
@@ -64,9 +64,6 @@ const RpiCell = ({ tile, wallName, updateTile }) => {
                     <p>Walls: {tile.walls?.join(", ")}</p>
                     <p>Segments: {tile.segments?.join(", ")}</p>
                     <p>Tile ID: {tile.id}</p>
-                    <p>Row: {tile.row}</p>
-                    <p>Column: {tile.col}</p>
-                    <p>Current Value: {tile.value}</p>
                     <p>
                         Status: <Tag color={
                         tile.status === "working" ? "green" :
@@ -76,6 +73,9 @@ const RpiCell = ({ tile, wallName, updateTile }) => {
                         {getStatusText()}
                     </Tag>
                     </p>
+                    {Object.entries(tile.data).map(([key, value]) => (
+                        <p key={key}>{key}: {value}</p>
+                    ))}
                     <p>Metadata: {JSON.stringify(tile.metadata)}</p>
 
                     <div style={{ display: "flex", gap: "10px", marginTop: "15px" }}>
