@@ -1,4 +1,4 @@
-import {useState, useReducer, useEffect} from "react";
+import {useState, useReducer, useEffect, useRef} from "react";
 import { Layout, Button, message } from "antd";
 import { MenuOutlined } from "@ant-design/icons";
 import { generateMockData } from "./Components/mqttWebSocketListener";
@@ -56,9 +56,9 @@ const tilesReducer = (state, action) => {
 };
 
 function generateTiles(wallOrSegmentName, cellData) {
-    const tiles = {};
+    const Tiles = {};
     Object.keys(cellData).forEach((key) => {
-        tiles[key] = {
+        Tiles[key] = {
             id: key,
             row: key.slice(1),
             col: key.charAt(0),
@@ -69,7 +69,7 @@ function generateTiles(wallOrSegmentName, cellData) {
             segments: new Set(),
         };
     });
-    return tiles;
+    return Tiles;
 }
 
 const Dashboard = () => {
@@ -82,6 +82,12 @@ const Dashboard = () => {
 
     // Initialize tiles state with useReducer
     const [tiles, dispatchTiles] = useReducer(tilesReducer, {});
+
+    const tilesRef = useRef(tiles);
+
+    useEffect(() => {
+        tilesRef.current = tiles;
+    }, [tiles]);
 
 
     const getTilesByCategory = (categoryType) => {
@@ -104,6 +110,7 @@ const Dashboard = () => {
         }, {});
 
         console.log(`${categoryType} organized:`, sortedCategories);
+        console.log("tiles: ",tiles)
         return sortedCategories;
     };
 
@@ -229,11 +236,11 @@ const Dashboard = () => {
     const handleMessage = (data) => {
         try {
             // Find the tile by ID
-            if (tiles[data.id]) {
+            if (tilesRef.current[data.id]) {
                 updateTile(data.id, {
                     value: Math.round(parseFloat(data.temp)),
-                    // Map the old status "1" to "working" and "0" to "deactivated"
-                    status: data.status === "1" ? "working" : "deactivated"
+                    // Map the old status "1" to "working" and "0" to "faulty"
+                    status: data.status === "1" ? "working" : "faulty"
                 });
             } else {
                 console.warn(`No tile found for ID: ${data.id}`);

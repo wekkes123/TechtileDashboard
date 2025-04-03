@@ -49,7 +49,6 @@ const Segment = ({ segmentLabel, segmentData, updateTile, toggleSegment }) => {
                     gridAutoRows: "1fr",
                     gap: "10px",
                     justifyItems: "center",
-                    opacity: segmentData.active ? 1 : 0.5, // Dim grid when inactive
                 }}
             >
                 {rows.reduce((result, rowLabel, index) => {
