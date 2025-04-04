@@ -57,6 +57,7 @@ const tilesReducer = (state, action) => {
 
 function generateTiles(wallOrSegmentName, cellData) {
     const Tiles = {};
+    const timestamp = Date.now()
     Object.keys(cellData).forEach((key) => {
         Tiles[key] = {
             id: key,
@@ -65,7 +66,8 @@ function generateTiles(wallOrSegmentName, cellData) {
             value: 0,
             metadata: {},
             data: {},
-            status: "working",
+            last_received: new Date(),
+            status: {value: "working", timestamp: timestamp},
             walls: new Set(),
             segments: new Set(),
         };
@@ -89,6 +91,14 @@ const Dashboard = () => {
     useEffect(() => {
         tilesRef.current = tiles;
     }, [tiles]);
+
+    const normalizeTileId = (id) => {
+        const match = id.match(/^([A-Z])(\d+)$/i);
+        if (!match) return id; // fallback to original if it doesn't match the pattern
+
+        const [, letter, number] = match;
+        return `${letter.toUpperCase()}${number.padStart(2, "0")}`;
+    };
 
 
     const getTilesByCategory = (categoryType) => {
@@ -241,30 +251,43 @@ const Dashboard = () => {
                 return;
             }
 
-            if (tilesRef.current[data.id]) {
-                let metaData = {};
+            const normalizedId = normalizeTileId(data.id);
+            const timestamp = Date.now();
+            let metaData = {};
+            let statusUpdate = null;
 
-                Object.entries(data).forEach(([dataId, value]) => {
-                    if (dataId === "status") {
-                        updateTile(data.id, {
-                            status: value === "1" ? "working" : "faulty"
-                        });
-                    } else if (dataId !== "id") {
-                        metaData[dataId] = value;
-                    }
+            Object.entries(data).forEach(([dataId, value]) => {
+                if (dataId === "status") {
+                    statusUpdate = {
+                        value: value === "1" ? "working" : "faulty",
+                        timestamp
+                    };
+                } else if (dataId !== "id") {
+                    metaData[dataId] = {
+                        value,
+                        timestamp
+                    };
+                }
+            });
+
+            if (tilesRef.current[normalizedId]) {
+                const existingData = tilesRef.current[normalizedId]?.data || {};
+                updateTile(normalizedId, {
+                    ...(statusUpdate ? { status: statusUpdate } : {}),
+                    data: {
+                        ...existingData,
+                        ...metaData
+                    },
+                    last_received: timestamp
                 });
-
-                updateTile(data.id, {
-                    data: metaData,
-                });
-
             } else {
-                console.warn(`No tile found for ID: ${data?.id}`);
+                console.warn(`No tile found for ID: ${data?.id} (normalized as ${normalizedId})`);
             }
         } catch (error) {
             console.error("Error processing data:", error);
         }
     };
+
 
 
     useEffect(() => {
