@@ -257,7 +257,8 @@ const Dashboard = () => {
             let metaData = {};
             let statusUpdate = null;
 
-            const status = await pingRpi(data.id);
+            const hostname = `rpi-${data.id}.local`
+            const status = await pingRpi(hostname);
 
             Object.entries(data).forEach(([dataId, value]) => {
                 if (dataId !== "id" && dataId !== "status") {
