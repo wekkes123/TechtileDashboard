@@ -9,6 +9,7 @@
     "@testing-library/react": "^16.2.0",
     "@testing-library/user-event": "^13.5.0",
     "antd": "^5.24.1",
+    "axios": "^1.9.0",
     "js-sdsl": "^4.4.2",
     "js-yaml": "^4.1.0",
     "mqtt": "^5.10.4",

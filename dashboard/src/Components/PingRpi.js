@@ -1,16 +1,13 @@
+import axios from "axios";
+
 const pingRpi = async (hostname) => {
     try {
-        const controller = new AbortController();
-        const timeout = setTimeout(() => controller.abort(), 1000);
-
-        const response = await fetch(`http://${hostname}`, {
-            method: 'HEAD',
-            mode: 'no-cors', // still useful to trigger the request
-            signal: controller.signal,
-        });
-
-        clearTimeout(timeout);
-        return 'working';
+        const response = await axios.get(`http://localhost:5000/ping/${hostname}`);
+        if (response.data.status === 'alive') {
+            return 'working';
+        } else {
+            return 'deactivated';
+        }
     } catch (err) {
         return 'faulty';
     }
