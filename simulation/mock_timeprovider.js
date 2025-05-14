@@ -1,4 +1,4 @@
-const { client } = require("../src/MQTT/mqtt_config2");
+const { client } = require("../dashboard/src/MQTT/mqtt_config2");
 
 function publishTimeProviderData() {
     const interval = 1000;
