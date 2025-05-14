@@ -7,6 +7,7 @@ import Wall from "./Components/Wall";
 import ControlPanel from "./Components/ControlPanel";
 import Segment from "./Components/Segment";
 import yaml from "js-yaml";
+import pingRpi from './Components/PingRpi';
 
 const { Header, Content, Footer } = Layout;
 
@@ -244,7 +245,7 @@ const Dashboard = () => {
         }
     };
 
-    const handleMessage = (data) => {
+    const handleMessage = async (data) => {
         try {
             if (!data || typeof data !== "object") {
                 console.warn("Received invalid data:", data);
@@ -256,13 +257,10 @@ const Dashboard = () => {
             let metaData = {};
             let statusUpdate = null;
 
+            const status = await pingRpi(data.id);
+
             Object.entries(data).forEach(([dataId, value]) => {
-                if (dataId === "status") {
-                    statusUpdate = {
-                        value: value === "1" ? "working" : "faulty",
-                        timestamp
-                    };
-                } else if (dataId !== "id") {
+                if (dataId !== "id" && dataId !== "status") {
                     metaData[dataId] = {
                         value,
                         timestamp
@@ -270,10 +268,15 @@ const Dashboard = () => {
                 }
             });
 
+            statusUpdate = {
+                value: status,
+                timestamp
+            };
+
             if (tilesRef.current[normalizedId]) {
                 const existingData = tilesRef.current[normalizedId]?.data || {};
                 updateTile(normalizedId, {
-                    ...(statusUpdate ? { status: statusUpdate } : {}),
+                    ...(statusUpdate ? {status: statusUpdate} : {}),
                     data: {
                         ...existingData,
                         ...metaData
@@ -287,8 +290,6 @@ const Dashboard = () => {
             console.error("Error processing data:", error);
         }
     };
-
-
 
     useEffect(() => {
         generateMockData(handleMessage);
