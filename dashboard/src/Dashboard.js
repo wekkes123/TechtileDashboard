@@ -103,7 +103,7 @@ const Dashboard = () => {
 
 
     const getTilesByCategory = (categoryType) => {
-        console.log(`Organizing tiles for ${categoryType}...`);
+        //console.log(`Organizing tiles for ${categoryType}...`);
         const categorizedTiles = {};
 
         Object.entries(tiles).forEach(([tileId, tileData]) => {
@@ -121,8 +121,8 @@ const Dashboard = () => {
             return acc;
         }, {});
 
-        console.log(`${categoryType} organized:`, sortedCategories);
-        console.log("tiles: ",tiles)
+        //console.log(`${categoryType} organized:`, sortedCategories);
+        //console.log("tiles: ",tiles)
         return sortedCategories;
     };
 
@@ -134,7 +134,7 @@ const Dashboard = () => {
             .then((data) => {
                 if (!data || !data.all) return;
 
-                console.log("Fetched YAML data:", data);
+                //console.log("Fetched YAML data:", data);
 
                 const allCells = {};
                 const midspanConfig = data.all.vars.midspans
@@ -144,7 +144,7 @@ const Dashboard = () => {
                 Object.entries(data.all.children).forEach(([key, cellData]) => {
                     if (!cellData.hosts) return;
 
-                    console.log(`Processing ${key}:`, cellData.hosts);
+                    //console.log(`Processing ${key}:`, cellData.hosts);
                     const newTiles = generateTiles(key, cellData.hosts);
 
                     Object.entries(newTiles).forEach(([cellKey, cellInfo]) => {
@@ -166,7 +166,7 @@ const Dashboard = () => {
                     allCells[cellKey].segments = Array.from(allCells[cellKey].segments);
                 });
 
-                console.log("Final processed rpiCells:", allCells);
+                //console.log("Final processed rpiCells:", allCells);
 
                 // Initialize the tiles state with the processed cells
                 dispatchTiles({
@@ -293,8 +293,12 @@ const Dashboard = () => {
     };
 
     useEffect(() => {
-        generateMockData(handleMessage);
+        generateMockData((data) => {
+            //runs in parallel
+            Promise.resolve().then(() => handleMessage(data));
+        });
     }, []);
+
 
     return (
         <Layout style={{minHeight: "100vh", display: "flex"}}>

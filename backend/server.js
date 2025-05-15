@@ -1,11 +1,9 @@
 const express = require('express');
-const cors = require('cors');
 const ping = require('ping');
 
 const app = express();
 const port = 5000;
 
-app.use(cors());
 
 // Ping endpoint
 app.get('/ping/:hostname', async (req, res) => {
