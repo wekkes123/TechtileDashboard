@@ -6,12 +6,13 @@ import InfoBar from "./Components/ServerBar";
 import Wall from "./Components/Wall";
 import ControlPanel from "./Components/ControlPanel";
 import Segment from "./Components/Segment";
+import DashboardHeader from "./Components/DashboardHeader";
 import yaml from "js-yaml";
 import pingRpi from './Components/PingRpi';
 import GraphPage from "./Components/GraphPage";
 
 const { Header, Content, Footer } = Layout;
-
+//todo yaml needs real ip
 async function fetchHosts() {
     const response = await fetch("/hosts.yaml");
     const text = await response.text();
@@ -59,7 +60,6 @@ const tilesReducer = (state, action) => {
 
 function generateTiles(wallOrSegmentName, cellData) {
     const Tiles = {};
-    const timestamp = Date.now()
     Object.keys(cellData).forEach((key) => {
         Tiles[key] = {
             id: key,
@@ -68,8 +68,7 @@ function generateTiles(wallOrSegmentName, cellData) {
             value: 0,
             metadata: {},
             data: {},
-            last_received: new Date(),
-            status: {value: "working", timestamp: timestamp},
+            status: "working",
             walls: new Set(),
             segments: new Set(),
         };
@@ -84,6 +83,8 @@ const Dashboard = () => {
     const [open, setOpen] = useState(false);
     const [viewMode, setViewMode] = useState("walls")
     const [visibleItems, setVisibleItems] = useState([]);
+    const [rpi_ip,setrpi_ip] = useState("127.0.0.1");
+    const [activity,setActivity] = useState(false);
     const [graphVisible, setGraphVisible] = useState(false);
 
 
@@ -139,8 +140,14 @@ const Dashboard = () => {
 
                 //console.log("Fetched YAML data:", data);
 
+                // Extract and store the Pi IP
+                const ipFromYaml = data?.all?.vars?.api_ip;
+                if (ipFromYaml) {
+                    setrpi_ip(ipFromYaml);
+                }
+
                 const allCells = {};
-                const midspanConfig = data.all.vars.midspans
+                const midspanConfig = data.all.vars.midspans;
                 const fetchedWallNames = data.all.children.rpis.children;
 
                 // Process walls and segments using the same base cell data
@@ -186,6 +193,7 @@ const Dashboard = () => {
             })
             .catch((error) => console.error("Failed to load hosts.yaml:", error));
     }, []);
+
 
 
     useEffect(() => {
@@ -335,63 +343,21 @@ const Dashboard = () => {
     return (
         <Layout style={{minHeight: "100vh", display: "flex"}}>
             <Layout style={{width: open ? "50vw" : "100vw", transition: "width 0.3s ease"}}>
-                <Header style={{
-                    background: "#001529",
-                    padding: "0 16px",
-                    display: "flex",
-                    flexDirection: "column",
-                    justifyContent: "center"
-                }}>
-                    <div style={{
-                        display: "flex",
-                        justifyContent: "space-between",
-                        alignItems: "center"
-                    }}>
-                        <h1 style={{color: "white", margin: 0}}>Dashboard</h1>
-                        <Button
-                            type="primary"
-                            icon={<MenuOutlined/>}
-                            onClick={() => setOpen(true)}
-                            style={{marginRight: '15px', marginTop: '35px'}}
-                        >
-                            Settings
-                        </Button>
-                    </div>
-                    <div style={{
-                        display: "flex",
-                        justifyContent: "center",
-                        gap: "10px",
-                        marginTop: "10px"
-                    }}>
-                        <Button
-                            onClick={debugFunctions.reactivateAllTiles}
-                            type="primary"
-                            style={{backgroundColor: "green"}}
-                        >
-                            Set All Working
-                        </Button>
-                        <Button
-                            onClick={debugFunctions.setAllFaulty}
-                            danger
-                        >
-                            Set All Faulty
-                        </Button>
-                        <Button
-                            onClick={debugFunctions.setAllDeactivated}
-                            style={{backgroundColor: "#d9d9d9", color: "rgba(0,0,0,0.65)"}}
-                        >
-                            Deactivate All
-                        </Button>
-                        <Button
-                            onClick={pingAllRpis}
-                            style={{backgroundColor: "lightblue", color: "rgba(1,1,1,1)"}}
-                        >
-                            Ping All
-                        </Button>
-                    </div>
-                </Header>
-                <Content style={{ padding: "16px", display: "grid", gridTemplateColumns: "1fr 1fr", gap: "40px" }}>
-                    {viewMode === "walls"
+                <DashboardHeader
+                    setOpen={setOpen}
+                    debugFunctions={debugFunctions}
+                    rpiIp={rpi_ip}
+                />
+                <Content
+                    style={{
+                        padding: "16px",
+                        display: "grid",
+                        gridTemplateColumns: "1fr 1fr",
+                        gap: "40px",
+                        marginTop: "70px"
+                    }}
+                >
+                {viewMode === "walls"
                         ? Object.entries(walls)
                             .filter(([name]) => visibleItems.includes(name))  // Only show checked walls
                             .map(([wallName, wallData]) => (
@@ -422,6 +388,8 @@ const Dashboard = () => {
                 segmentNames={segments}
                 visibleItems={visibleItems}
                 setVisibleItems={setVisibleItems}
+                rpi_ip={rpi_ip}
+                activity={activity}
             />
 
             <Footer><InfoBar/></Footer>
