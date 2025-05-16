@@ -12,6 +12,7 @@
   "dependencies": {
     "cors": "^2.8.5",
     "express": "^5.1.0",
-    "ping": "^0.4.4"
+    "ping": "^0.4.4",
+    "sqlite3": "^5.1.7"
   }
 }

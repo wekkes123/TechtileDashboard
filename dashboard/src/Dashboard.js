@@ -8,6 +8,7 @@ import ControlPanel from "./Components/ControlPanel";
 import Segment from "./Components/Segment";
 import yaml from "js-yaml";
 import pingRpi from './Components/PingRpi';
+import GraphPage from "./Components/GraphPage";
 
 const { Header, Content, Footer } = Layout;
 
@@ -83,6 +84,8 @@ const Dashboard = () => {
     const [open, setOpen] = useState(false);
     const [viewMode, setViewMode] = useState("walls")
     const [visibleItems, setVisibleItems] = useState([]);
+    const [graphVisible, setGraphVisible] = useState(false);
+
 
     // Initialize tiles state with useReducer
     const [tiles, dispatchTiles] = useReducer(tilesReducer, {});
@@ -401,6 +404,14 @@ const Dashboard = () => {
                             ))}
                 </Content>
             </Layout>
+            <Button
+                type="primary"
+                onClick={() => setGraphVisible(true)}
+                style={{ backgroundColor: "#722ed1", marginTop: "35px" }}
+            >
+                Show Graph
+            </Button>
+
 
             <ControlPanel
                 open={open}
@@ -414,6 +425,30 @@ const Dashboard = () => {
             />
 
             <Footer><InfoBar/></Footer>
+            {graphVisible && (
+                <div style={{
+                    position: 'fixed',
+                    top: 0,
+                    left: 0,
+                    height: '100vh',
+                    width: '100vw',
+                    backgroundColor: 'white',
+                    zIndex: 9999,
+                    padding: '20px',
+                    overflow: 'auto'
+                }}>
+                    <Button
+                        type="primary"
+                        danger
+                        onClick={() => setGraphVisible(false)}
+                        style={{ position: 'absolute', top: 20, right: 20, zIndex: 10000 }}
+                    >
+                        Close
+                    </Button>
+                    <GraphPage deviceId="TECHDASH"/>
+                </div>
+            )}
+
         </Layout>
     );
 };
