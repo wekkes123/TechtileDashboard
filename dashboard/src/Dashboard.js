@@ -245,6 +245,29 @@ const Dashboard = () => {
         }
     };
 
+    const pingAllRpis = async () => {
+        const timestamp = Date.now();
+        const tiles = tilesRef.current;
+
+        const pingPromises = Object.keys(tiles).map(async (id) => {
+            const hostname = `rpi-${id}.local`;
+            const status = await pingRpi(hostname);
+            updateTile(id, {
+                status: {
+                    value: status,
+                    timestamp
+                }
+            });
+        });
+
+        try {
+            await Promise.all(pingPromises);
+        } catch (error) {
+            console.error("Error while pinging RPis:", error);
+        }
+    };
+
+
     const handleMessage = async (data) => {
         try {
             if (!data || typeof data !== "object") {
@@ -255,10 +278,6 @@ const Dashboard = () => {
             const normalizedId = normalizeTileId(data.id);
             const timestamp = Date.now();
             let metaData = {};
-            let statusUpdate = null;
-
-            const hostname = `rpi-${data.id}.local`
-            const status = await pingRpi(hostname);
 
             Object.entries(data).forEach(([dataId, value]) => {
                 if (dataId !== "id" && dataId !== "status") {
@@ -269,15 +288,9 @@ const Dashboard = () => {
                 }
             });
 
-            statusUpdate = {
-                value: status,
-                timestamp
-            };
-
             if (tilesRef.current[normalizedId]) {
                 const existingData = tilesRef.current[normalizedId]?.data || {};
                 updateTile(normalizedId, {
-                    ...(statusUpdate ? {status: statusUpdate} : {}),
                     data: {
                         ...existingData,
                         ...metaData
@@ -294,9 +307,11 @@ const Dashboard = () => {
 
     useEffect(() => {
         generateMockData((data) => {
-            //runs in parallel
             Promise.resolve().then(() => handleMessage(data));
         });
+
+        const interval = setInterval(pingAllRpis, 10000); // ping every 10 seconds
+        return () => clearInterval(interval);
     }, []);
 
 
