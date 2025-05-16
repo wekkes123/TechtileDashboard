@@ -245,27 +245,41 @@ const Dashboard = () => {
         }
     };
 
+    let isPinging = false;
+
     const pingAllRpis = async () => {
+        if (isPinging) return;
+        isPinging = true;
+
         const timestamp = Date.now();
         const tiles = tilesRef.current;
 
-        const pingPromises = Object.keys(tiles).map(async (id) => {
-            const hostname = `rpi-${id}.local`;
-            const status = await pingRpi(hostname);
-            updateTile(id, {
-                status: {
-                    value: status,
-                    timestamp
-                }
-            });
-        });
-
         try {
-            await Promise.all(pingPromises);
+            const pingResults = await Promise.allSettled(
+                Object.keys(tiles).map(async (id) => {
+                    const hostname = `rpi-${id}.local`;
+                    const status = await pingRpi(hostname);
+                    updateTile(id, {
+                        status: {
+                            value: status,
+                            timestamp
+                        }
+                    });
+                })
+            );
+
+            const failed = pingResults.filter(r => r.status === "rejected");
+            if (failed.length) {
+                console.warn(`${failed.length} RPis failed to respond`);
+            }
+
         } catch (error) {
-            console.error("Error while pinging RPis:", error);
+            console.error("Unexpected error while pinging RPis:", error);
+        } finally {
+            isPinging = false;
         }
     };
+
 
 
     const handleMessage = async (data) => {
@@ -310,7 +324,7 @@ const Dashboard = () => {
             Promise.resolve().then(() => handleMessage(data));
         });
 
-        const interval = setInterval(pingAllRpis, 10000); // ping every 10 seconds
+        const interval = setInterval(pingAllRpis, 100000); // ping every 100 seconds
         return () => clearInterval(interval);
     }, []);
 
@@ -364,6 +378,12 @@ const Dashboard = () => {
                             style={{backgroundColor: "#d9d9d9", color: "rgba(0,0,0,0.65)"}}
                         >
                             Deactivate All
+                        </Button>
+                        <Button
+                            onClick={pingAllRpis}
+                            style={{backgroundColor: "lightblue", color: "rgba(1,1,1,1)"}}
+                        >
+                            Ping All
                         </Button>
                     </div>
                 </Header>
