@@ -1,6 +1,6 @@
 import mqtt from "mqtt";
 
-const MQTT_BROKER = "wss://test.mosquitto.org:8081"; // Secure WebSocket URL
+const MQTT_BROKER = "ws://10.128.48.5:8081"; // Secure WebSocket URL
 
 export function generateMockData(handleMessage) {
     //this generates dummy data

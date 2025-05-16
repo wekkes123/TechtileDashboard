@@ -1,7 +1,7 @@
 import * as mqtt from '../../node_modules/mqtt/dist/mqtt.min.js';
 
 // Use WebSocket URL for the broker
-const BROKER_URL = 'ws://test.mosquitto.org:8080/mqtt';
+const BROKER_URL = 'ws://10.128.48.5:8080/mqtt';
 
 const options = {
     clientId: `client_${Math.random().toString(16).slice(3)}`,

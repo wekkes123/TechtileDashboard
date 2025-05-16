@@ -1,4 +1,4 @@
-const { client } = require("../src/MQTT/mqtt_config2");
+const { client } = require("../dashboard/src/MQTT/mqtt_config2");
 
 // Function to generate a random IP
 const generateIP = () => `192.168.1.${Math.floor(Math.random() * 100) + 1}`; // Random IPs in 192.168.1.x
@@ -6,10 +6,11 @@ const getRandomLoad = () => (Math.random() * 100).toFixed(2) + "%";
 const getRandomRam = () => (Math.random() * 8).toFixed(2) + "GB";
 const getRandomDisk = () => (Math.random() * 500).toFixed(2) + "GB";
 const getRandomTemp = () => (Math.random() * 40 + 30).toFixed(2);
-
+const letter = String.fromCharCode(65 + Math.floor(Math.random() * 6)); // A-F
+const number = Math.floor(Math.random() * 20) + 1; // 1-20
 // Generate mock devices with randomized ids (no 'RPi-' prefix)
 const rpiDevices = Array.from({ length: 20 }, (_, i) => ({
-    id: `${String.fromCharCode(65 + Math.floor(Math.random() * 6))}${Math.floor(Math.random() * 20) + 1}`, // Random ID in the format of A1, B5, etc.
+    id: `${letter}${number}`, // Random ID in the format of A1, B5, etc.
     ip: generateIP(),
     status: "Running", // Initial status
 }));

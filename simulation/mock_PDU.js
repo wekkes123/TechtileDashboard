@@ -1,5 +1,5 @@
 
-const { client } = require("../src/MQTT/mqtt_config2");
+const { client } = require("../dashboard/src/MQTT/mqtt_config2");
 
 function publishPduData() {
     const interval = 700;

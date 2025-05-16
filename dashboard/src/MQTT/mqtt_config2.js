@@ -1,7 +1,7 @@
 const mqtt = require("mqtt");
 
 // Global MQTT settings
-const BROKER_URL = "mqtt://test.mosquitto.org";
+const BROKER_URL = "mqtt://10.128.48.5";
 const OPTIONS = {
     clientId: `client_${Math.random().toString(16).slice(3)}`,
     clean: true,

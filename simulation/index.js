@@ -1,4 +1,4 @@
-const { client } = require("../src/MQTT/mqtt_config2");
+const { client } = require("../dashboard/src/MQTT/mqtt_config2");
 const { publishRpiData } = require("./mock_pis");
 const { publishPduData } = require("./mock_PDU");
 const { publishMidspanData } = require("./mock_midspan");

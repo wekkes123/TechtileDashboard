@@ -8,6 +8,8 @@ import ControlPanel from "./Components/ControlPanel";
 import Segment from "./Components/Segment";
 import DashboardHeader from "./Components/DashboardHeader";
 import yaml from "js-yaml";
+import pingRpi from './Components/PingRpi';
+import GraphPage from "./Components/GraphPage";
 
 const { Header, Content, Footer } = Layout;
 //todo yaml needs real ip
@@ -83,6 +85,8 @@ const Dashboard = () => {
     const [visibleItems, setVisibleItems] = useState([]);
     const [rpi_ip,setrpi_ip] = useState("127.0.0.1");
     const [activity,setActivity] = useState(false);
+    const [graphVisible, setGraphVisible] = useState(false);
+
 
     // Initialize tiles state with useReducer
     const [tiles, dispatchTiles] = useReducer(tilesReducer, {});
@@ -93,9 +97,17 @@ const Dashboard = () => {
         tilesRef.current = tiles;
     }, [tiles]);
 
+    const normalizeTileId = (id) => {
+        const match = id.match(/^([A-Z])(\d+)$/i);
+        if (!match) return id; // fallback to original if it doesn't match the pattern
+
+        const [, letter, number] = match;
+        return `${letter.toUpperCase()}${number.padStart(2, "0")}`;
+    };
+
 
     const getTilesByCategory = (categoryType) => {
-        console.log(`Organizing tiles for ${categoryType}...`);
+        //console.log(`Organizing tiles for ${categoryType}...`);
         const categorizedTiles = {};
 
         Object.entries(tiles).forEach(([tileId, tileData]) => {
@@ -113,8 +125,8 @@ const Dashboard = () => {
             return acc;
         }, {});
 
-        console.log(`${categoryType} organized:`, sortedCategories);
-        console.log("tiles: ",tiles)
+        //console.log(`${categoryType} organized:`, sortedCategories);
+        //console.log("tiles: ",tiles)
         return sortedCategories;
     };
 
@@ -126,7 +138,7 @@ const Dashboard = () => {
             .then((data) => {
                 if (!data || !data.all) return;
 
-                console.log("Fetched YAML data:", data);
+                //console.log("Fetched YAML data:", data);
 
                 // Extract and store the Pi IP
                 const ipFromYaml = data?.all?.vars?.api_ip;
@@ -138,9 +150,11 @@ const Dashboard = () => {
                 const midspanConfig = data.all.vars.midspans;
                 const fetchedWallNames = data.all.children.rpis.children;
 
+                // Process walls and segments using the same base cell data
                 Object.entries(data.all.children).forEach(([key, cellData]) => {
                     if (!cellData.hosts) return;
 
+                    //console.log(`Processing ${key}:`, cellData.hosts);
                     const newTiles = generateTiles(key, cellData.hosts);
 
                     Object.entries(newTiles).forEach(([cellKey, cellInfo]) => {
@@ -156,11 +170,15 @@ const Dashboard = () => {
                     });
                 });
 
+                // Convert sets to arrays for easier rendering
                 Object.keys(allCells).forEach((cellKey) => {
                     allCells[cellKey].walls = Array.from(allCells[cellKey].walls);
                     allCells[cellKey].segments = Array.from(allCells[cellKey].segments);
                 });
 
+                //console.log("Final processed rpiCells:", allCells);
+
+                // Initialize the tiles state with the processed cells
                 dispatchTiles({
                     type: 'BULK_UPDATE_TILES',
                     payload: Object.entries(allCells).map(([tileId, tileData]) => ({
@@ -238,42 +256,89 @@ const Dashboard = () => {
         }
     };
 
-    const handleMessage = (data) => {
+    let isPinging = false;
+
+    const pingAllRpis = async () => {
+        if (isPinging) return;
+        isPinging = true;
+
+        const timestamp = Date.now();
+        const tiles = tilesRef.current;
+
+        try {
+            const pingResults = await Promise.allSettled(
+                Object.keys(tiles).map(async (id) => {
+                    const hostname = `rpi-${id}.local`;
+                    const status = await pingRpi(hostname);
+                    updateTile(id, {
+                        status: {
+                            value: status,
+                            timestamp
+                        }
+                    });
+                })
+            );
+
+            const failed = pingResults.filter(r => r.status === "rejected");
+            if (failed.length) {
+                console.warn(`${failed.length} RPis failed to respond`);
+            }
+
+        } catch (error) {
+            console.error("Unexpected error while pinging RPis:", error);
+        } finally {
+            isPinging = false;
+        }
+    };
+
+
+
+    const handleMessage = async (data) => {
         try {
             if (!data || typeof data !== "object") {
                 console.warn("Received invalid data:", data);
                 return;
             }
 
-            if (tilesRef.current[data.id]) {
-                let metaData = {};
+            const normalizedId = normalizeTileId(data.id);
+            const timestamp = Date.now();
+            let metaData = {};
 
-                Object.entries(data).forEach(([dataId, value]) => {
-                    if (dataId === "status") {
-                        updateTile(data.id, {
-                            status: value === "1" ? "working" : "faulty"
-                        });
-                    } else if (dataId !== "id") {
-                        metaData[dataId] = value;
-                    }
+            Object.entries(data).forEach(([dataId, value]) => {
+                if (dataId !== "id" && dataId !== "status") {
+                    metaData[dataId] = {
+                        value,
+                        timestamp
+                    };
+                }
+            });
+
+            if (tilesRef.current[normalizedId]) {
+                const existingData = tilesRef.current[normalizedId]?.data || {};
+                updateTile(normalizedId, {
+                    data: {
+                        ...existingData,
+                        ...metaData
+                    },
+                    last_received: timestamp
                 });
-
-                updateTile(data.id, {
-                    data: metaData,
-                });
-
             } else {
-                console.warn(`No tile found for ID: ${data?.id}`);
+                console.warn(`No tile found for ID: ${data?.id} (normalized as ${normalizedId})`);
             }
         } catch (error) {
             console.error("Error processing data:", error);
         }
     };
 
-
     useEffect(() => {
-        generateMockData(handleMessage);
+        generateMockData((data) => {
+            Promise.resolve().then(() => handleMessage(data));
+        });
+
+        const interval = setInterval(pingAllRpis, 100000); // ping every 100 seconds
+        return () => clearInterval(interval);
     }, []);
+
 
     return (
         <Layout style={{minHeight: "100vh", display: "flex"}}>
@@ -305,6 +370,14 @@ const Dashboard = () => {
                             ))}
                 </Content>
             </Layout>
+            <Button
+                type="primary"
+                onClick={() => setGraphVisible(true)}
+                style={{ backgroundColor: "#722ed1", marginTop: "35px" }}
+            >
+                Show Graph
+            </Button>
+
 
             <ControlPanel
                 open={open}
@@ -320,6 +393,30 @@ const Dashboard = () => {
             />
 
             <Footer><InfoBar/></Footer>
+            {graphVisible && (
+                <div style={{
+                    position: 'fixed',
+                    top: 0,
+                    left: 0,
+                    height: '100vh',
+                    width: '100vw',
+                    backgroundColor: 'white',
+                    zIndex: 9999,
+                    padding: '20px',
+                    overflow: 'auto'
+                }}>
+                    <Button
+                        type="primary"
+                        danger
+                        onClick={() => setGraphVisible(false)}
+                        style={{ position: 'absolute', top: 20, right: 20, zIndex: 10000 }}
+                    >
+                        Close
+                    </Button>
+                    <GraphPage deviceId="TECHDASH"/>
+                </div>
+            )}
+
         </Layout>
     );
 };
