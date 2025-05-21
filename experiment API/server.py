@@ -8,6 +8,8 @@ import yaml
 app = Flask(__name__)
 CORS(app)
 
+cache = Cache(app, config={'CACHE_TYPE': 'simple'})
+
 STATUS_FILE_PATH = "status.json"
 
 
@@ -50,6 +52,58 @@ def update_status():
         import traceback
         traceback.print_exc()
         return jsonify({"error": str(e)}), 500
+
+@app.route("/ping/<hostname>", methods=["GET"])
+def ping_host(hostname):
+    try:
+        response_time = ping(hostname, timeout=10)
+        if response_time is not None:
+            return jsonify({"status": "alive", "time": round(response_time * 1000, 2)})  # ms
+        else:
+            return jsonify({"status": "failed"})
+    except Exception as e:
+        return jsonify({"error": "Error while pinging", "details": str(e)}), 500
+
+
+@app.route("/data/<deviceId>", methods=["GET"])
+@cache.cached(timeout=60, query_string=True)
+def get_device_data(deviceId):
+    try:
+        hours = int(request.args.get("hours", 6))
+        cutoff_timestamp = int(time.time()) - hours * 3600
+
+        conn = sqlite3.connect('/home/pi/rpi_data.db', check_same_thread=False)
+        cursor = conn.cursor()
+
+        query = """
+            SELECT cpuLoad, cpuTemp, ram, diskUsage, timestamp
+            FROM rpi_data
+            WHERE id = ? AND timestamp >= ?
+            ORDER BY timestamp ASC
+        """
+        cursor.execute(query, (deviceId, cutoff_timestamp))
+        rows = cursor.fetchall()
+        conn.close()
+
+        formatted = []
+        for row in rows:
+            cpu_load = float(str(row[0]).replace('%', '')) if row[0] else 0
+            cpu_temp = float(row[1]) if row[1] else 0
+            ram = float(str(row[2]).replace('MB', '').replace('GB', '').strip()) if row[2] else 0
+            disk_usage = float(str(row[3]).replace('MB', '').replace('GB', '').strip()) if row[3] else 0
+            timestamp = row[4]
+
+            formatted.append({
+                "cpuLoad": cpu_load,
+                "cpuTemp": cpu_temp,
+                "ram": ram,
+                "diskUsage": disk_usage,
+                "timestamp": timestamp
+            })
+
+        return jsonify(formatted)
+    except Exception as e:
+        return jsonify({"error": "Database error", "details": str(e)}), 500
 
 def get_lan_ip():
     try:

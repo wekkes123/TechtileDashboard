@@ -67,7 +67,7 @@ const GraphPage = ({ deviceId }) => {
     };
 
     return (
-        <div style={{ width: "100%", height: "100%",minHeight: "400px", backgroundColor: "white", padding: "20px" }}>
+        <div style={{ width: "100%", height: "100%",minHeight: "800px", backgroundColor: "white", padding: "20px" }}>
             <h2>Device: {deviceId}</h2>
 
             <div style={{ marginBottom: "1rem" }}>
