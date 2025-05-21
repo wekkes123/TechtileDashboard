@@ -4,10 +4,13 @@ import os
 import json
 import socket
 import yaml
+import sqlite3
+import time
+from ping3 import ping
 from flask_caching import Cache
 
 app = Flask(__name__)
-CORS(app)
+CORS(app, origins=["http://localhost:3000"])
 
 cache = Cache(app, config={'CACHE_TYPE': 'simple'})
 
