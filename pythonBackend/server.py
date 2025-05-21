@@ -10,7 +10,7 @@ from ping3 import ping
 from flask_caching import Cache
 
 app = Flask(__name__)
-CORS(app, origins=["http://localhost:3000"])
+CORS(app)
 
 cache = Cache(app, config={'CACHE_TYPE': 'simple'})
 
@@ -136,4 +136,5 @@ def update_api_ip_in_yaml(ip, path="hosts.yaml"):
         print("Failed to update YAML:", e)
 
 if __name__ == "__main__":
+    update_api_ip_in_yaml(get_lan_ip,"/home/pi/TechtileDashboard/build/hosts.yaml")
     app.run(host="0.0.0.0", port=5000)
