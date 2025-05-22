@@ -331,12 +331,21 @@ const Dashboard = () => {
     };
 
     useEffect(() => {
+        const timer = setTimeout(() => {
+            pingAllRpis();
+        }, 1000); // 1000ms delay
+
+        const interval = setInterval(pingAllRpis, 100000);
+        return () => {
+            clearTimeout(timer);
+            clearInterval(interval);}
+    }, []);
+
+
+    useEffect(() => {
         generateMockData((data) => {
             Promise.resolve().then(() => handleMessage(data));
         });
-
-        const interval = setInterval(pingAllRpis, 100000); // ping every 100 seconds
-        return () => clearInterval(interval);
     }, []);
 
 

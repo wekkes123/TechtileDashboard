@@ -27,17 +27,20 @@ app.get('/ping/:hostname', async (req, res) => {
 
 app.get('/data/:deviceId', (req, res) => {
     const { deviceId } = req.params;
-    const db = new sqlite3.Database('./rpi_data.db');
+    const hours = parseInt(req.query.hours) || 6; // default to 6 hours if not provided
+    const db = new sqlite3.Database('/home/pi/rpi_data.db');
+
+    // Calculate cutoff timestamp in seconds
+    const cutoffTimestamp = Math.floor(Date.now() / 1000) - hours * 3600;
 
     const query = `
         SELECT cpuLoad, cpuTemp, ram, diskUsage, timestamp
         FROM rpi_data
-        WHERE id = ?
-        ORDER BY timestamp DESC
-        LIMIT 100
+        WHERE id = ? AND timestamp >= ?
+        ORDER BY timestamp ASC
     `;
 
-    db.all(query, [deviceId], (err, rows) => {
+    db.all(query, [deviceId, cutoffTimestamp], (err, rows) => {
         db.close();
         if (err) {
             console.error("SQLite error:", err.message);
@@ -52,9 +55,10 @@ app.get('/data/:deviceId', (req, res) => {
             timestamp: row.timestamp
         }));
 
-        res.json(formatted.reverse()); // Chronological
+        res.json(formatted);
     });
 });
+
 
 
 app.listen(port, () => {
