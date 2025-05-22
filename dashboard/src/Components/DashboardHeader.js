@@ -3,7 +3,7 @@ import { Header } from "antd/es/layout/layout"; // Import Header directly
 import { Button } from "antd";
 import { MenuOutlined } from "@ant-design/icons";
 
-const DashboardHeader = ({ setOpen, debugFunctions, rpiIp }) => {
+const DashboardHeader = ({ setOpen, debugFunctions, rpiIp,pingAllRpis }) => {
     const [experimentStatus, setExperimentStatus] = useState("inactive");
     const [experimentMessage, setExperimentMessage] = useState("");
 
@@ -71,6 +71,12 @@ const DashboardHeader = ({ setOpen, debugFunctions, rpiIp }) => {
             </div>
 
             {/* Right: Settings button */}
+            <Button
+                onClick={() => pingAllRpis()}
+                style={{ backgroundColor: "lightblue", color: "rgba(1,1,1,1)" }}
+            >
+                Ping All
+            </Button>
             <Button
                 type="primary"
                 icon={<MenuOutlined />}

@@ -347,6 +347,7 @@ const Dashboard = () => {
                     setOpen={setOpen}
                     debugFunctions={debugFunctions}
                     rpiIp={rpi_ip}
+                    pingAllRpis={pingAllRpis}
                 />
                 <Content
                     style={{
