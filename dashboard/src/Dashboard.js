@@ -86,6 +86,9 @@ const Dashboard = () => {
     const [rpi_ip,setrpi_ip] = useState("127.0.0.1");
     const [activity,setActivity] = useState(false);
     const [graphVisible, setGraphVisible] = useState(false);
+    const [openHeader, setOpenHeader] = useState(false);
+    const [showExtra, setShowExtra] = useState(false); // NEW STATE
+
 
 
     // Initialize tiles state with useReducer
@@ -357,21 +360,57 @@ const Dashboard = () => {
                     debugFunctions={debugFunctions}
                     rpiIp={rpi_ip}
                     pingAllRpis={pingAllRpis}
+                    showExtra={showExtra}
+                    setShowExtra={setShowExtra}
                 />
+                {showExtra && (
+                    <div
+                        style={{
+                            position: "fixed",
+                            top: "70px",
+                            left: 0,
+                            right: 0,
+                            background: "#f0f2f5",
+                            borderBottom: "1px solid #d9d9d9",
+                            zIndex: 999,
+                            overflow: "hidden",
+                            display: "flex",
+                            justifyContent: "center",
+                            alignItems: "center",
+                            gap: "16px",
+                            padding: showExtra ? "16px" : "0px",
+                        }}
+                    >
+                        <p style={{margin: 0}}>Extra controls</p>
+                        <Button
+                            onClick={() => pingAllRpis()}
+                            style={{ backgroundColor: "lightblue", color: "rgba(1,1,1,1)" }}
+                        >
+                            Ping All
+                        </Button>
+                        <Button
+                            onClick={() => pingAllRpis()}//todo chqnge to shoz faulty
+                            style={{ backgroundColor: "lightblue", color: "rgba(1,1,1,1)" }}
+                        >
+                            Show Faulty
+                        </Button>
+                    </div>
+                )}
+
                 <Content
                     style={{
                         padding: "16px",
                         display: "grid",
                         gridTemplateColumns: "1fr 1fr",
                         gap: "40px",
-                        marginTop: "70px"
+                        marginTop: showExtra ? "140px" : "70px"
                     }}
                 >
-                {viewMode === "walls"
+                    {viewMode === "walls"
                         ? Object.entries(walls)
                             .filter(([name]) => visibleItems.includes(name))  // Only show checked walls
                             .map(([wallName, wallData]) => (
-                                <Wall key={wallName} wallName={wallName} wallData={wallData} updateTile={updateTile} />
+                                <Wall key={wallName} wallName={wallName} wallData={wallData} updateTile={updateTile}/>
                             ))
                         : Object.entries(segments)
                             .filter(([name]) => visibleItems.includes(name))  // Only show checked segments
