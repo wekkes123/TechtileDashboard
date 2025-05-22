@@ -402,7 +402,7 @@ const Dashboard = () => {
                 activity={activity}
             />
 
-            <Footer><InfoBar/></Footer>
+            <InfoBar/>
             {graphVisible && (
                 <div style={{
                     position: 'fixed',
