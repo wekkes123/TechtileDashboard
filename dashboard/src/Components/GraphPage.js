@@ -19,7 +19,7 @@ const rollingAverage = (arr, windowSize) => {
 
 const GraphPage = ({ deviceId }) => {
     const [data, setData] = useState([]);
-    const [hours, setHours] = useState(6);
+    const [hours, setHours] = useState(1);
     const [averageWindow, setAverageWindow] = useState(1);
 
     useEffect(() => {
