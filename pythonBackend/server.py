@@ -43,6 +43,26 @@ client.on_message = on_mqtt_message
 client.subscribe("rpi/control/ack/#")
 client.loop_start()
 
+def publish_status_periodically():
+    topic = "experiment"
+    interval = 10  # seconden
+
+    while True:
+        if os.path.exists(STATUS_FILE_PATH):
+            try:
+                with open(STATUS_FILE_PATH, "r") as f:
+                    data = json.load(f)
+                client.publish(topic, json.dumps(data))
+                print(f"[MQTT] Published status to '{topic}':", data)
+            except Exception as e:
+                print(f"[ERROR] Failed to publish status: {e}")
+        else:
+            print(f"[MQTT] Status file not found, skipping publish")
+
+        time.sleep(interval)
+mqtt_status_thread = threading.Thread(target=publish_status_periodically, daemon=True)
+mqtt_status_thread.start()
+
 
 # Flask routes
 @app.route("/status", methods=["GET"])
