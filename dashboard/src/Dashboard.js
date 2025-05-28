@@ -13,7 +13,6 @@ import GraphPage from "./Components/GraphPage";
 import MidspanDevice from "./Components/MidspanDevice";
 
 const { Header, Content, Footer } = Layout;
-//todo yaml needs real ip
 async function fetchHosts() {
     const response = await fetch("/hosts.yaml");
     const text = await response.text();
@@ -87,10 +86,12 @@ const Dashboard = () => {
     const [open, setOpen] = useState(false);
     const [viewMode, setViewMode] = useState("walls")
     const [visibleItems, setVisibleItems] = useState([]);
-    const [rpi_ip,setrpi_ip] = useState("127.0.0.1");
+    const [rpi_ip,setrpi_ip] = useState("10.128.48.5");
     const [activity,setActivity] = useState(false);
     const [openHeader, setOpenHeader] = useState(false);
-    const [showExtra, setShowExtra] = useState(false); // NEW STATE
+    const [showExtra, setShowExtra] = useState(false);
+    const [showOnlyFaulty, setShowOnlyFaulty] = useState(false);
+
 
     const [selectedTileId, setSelectedTileId] = useState(null);
     const [graphVisible, setGraphVisible] = useState(false);
@@ -117,11 +118,14 @@ const Dashboard = () => {
     };
 
 
-    const getTilesByCategory = (categoryType) => {
-        //console.log(`Organizing tiles for ${categoryType}...`);
+
+
+    const getTilesByCategory = (categoryType, filterFn = () => true) => {
         const categorizedTiles = {};
 
         Object.entries(tiles).forEach(([tileId, tileData]) => {
+            if (!filterFn(tileData)) return;
+
             const parents = categoryType === "walls" ? tileData.walls : tileData.segments;
 
             parents.forEach((parent) => {
@@ -130,28 +134,19 @@ const Dashboard = () => {
             });
         });
 
-        // Sort the categories alphabetically before returning
-        const sortedCategories = Object.keys(categorizedTiles).sort().reduce((acc, key) => {
+        return Object.keys(categorizedTiles).sort().reduce((acc, key) => {
             acc[key] = categorizedTiles[key];
             return acc;
         }, {});
-
-        //console.log(`${categoryType} organized:`, sortedCategories);
-        //console.log("tiles: ",tiles)
-        return sortedCategories;
     };
 
-    const walls = getTilesByCategory("walls");
-    const segments = getTilesByCategory("segments");
+    const walls = getTilesByCategory("walls", showOnlyFaulty ? (tile) => tile.status?.value === "faulty" : undefined);
+    const segments = getTilesByCategory("segments", showOnlyFaulty ? (tile) => tile.status?.value === "faulty" : undefined);
 
     useEffect(() => {
         fetchHosts()
             .then((data) => {
                 if (!data || !data.all) return;
-
-                //console.log("Fetched YAML data:", data);
-
-                // Extract and store the Pi IP
                 const ipFromYaml = data?.all?.vars?.api_ip;
                 if (ipFromYaml) {
                     setrpi_ip(ipFromYaml);
@@ -274,7 +269,7 @@ const Dashboard = () => {
         reactivateAllTiles: () => {
             const updates = Object.keys(tiles).map(tileId => ({
                 tileId,
-                updates: { status: "working" } // Changed from isActive: true
+                updates: { status: "working" }
             }));
             bulkUpdateTiles(updates);
         },
@@ -328,8 +323,6 @@ const Dashboard = () => {
             isPinging = false;
         }
     };
-
-
 
     const handleMessage = async (data) => {
         try {
@@ -426,20 +419,21 @@ const Dashboard = () => {
                             Ping All
                         </Button>
                         <Button
-                            onClick={() => pingAllRpis()}//todo chqnge to shoz faulty
+                            onClick={() => setShowOnlyFaulty(prev => !prev)}
                             style={{ backgroundColor: "lightblue", color: "rgba(1,1,1,1)" }}
                         >
-                            Show Faulty
+                            {showOnlyFaulty ? "Show All Tiles" : "Show Only Faulty"}
                         </Button>
                     </div>
                 )}
 
                 <Content
                     style={{
-                        padding: "16px",
+                        padding: "10px",
                         display: "grid",
                         gridTemplateColumns: "1fr 1fr",
-                        gap: "40px",
+                        maxWidth: "99vw",
+                        gap: "20px",
                         marginTop: showExtra ? "140px" : "70px"
                     }}
                 >
