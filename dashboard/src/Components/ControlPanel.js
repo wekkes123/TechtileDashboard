@@ -13,17 +13,46 @@ const ControlPanel = ({
                           visibleItems,
                           setVisibleItems,
                           rpi_ip,
-                          activity
+                          activity,
+                          tiles,
+                          setSelectedDisplayField
                       }) => {
     const [experimentEnabled, setExperimentEnabled] = useState(false);
     const [experimentInput, setExperimentInput] = useState("");
     const [showUpdateNotice, setShowUpdateNotice] = useState(false);
+    const [selectedField, setSelectedField] = useState(null);
 
     useEffect(() => {
         setExperimentEnabled(activity);
     }, [activity]);
 
     const items = viewMode === "walls" ? Object.keys(wallNames || {}) : Object.keys(segmentNames || {});
+
+    const getAvailableDataFields = () => {
+        for (const tile of Object.values(tiles || {})) {
+            if (tile.status?.value === "working" && tile.data && Object.keys(tile.data).length > 0) {
+                return Object.keys(tile.data);
+            }
+        }
+        return [];
+    };
+
+    const [availableFields, setAvailableFields] = useState([]);
+
+    useEffect(() => {
+        const extractFields = () => {
+            for (const tile of Object.values(tiles || {})) {
+                if (tile.status?.value === "working" && tile.data && Object.keys(tile.data).length > 0) {
+                    return Object.keys(tile.data);
+                }
+            }
+            return [];
+        };
+
+        const fields = extractFields();
+        setAvailableFields(fields);
+    }, [tiles]);
+
 
     const toggleVisibleItem = (item) => {
         setVisibleItems((prev) => {
@@ -34,12 +63,12 @@ const ControlPanel = ({
         });
     };
 
+    //updates the experiment status with an api request, the ip for the request comes form the yaml.
     const sendExperimentStatus = async (status, message = "") => {
         const payload = {
             status,
             message: message.trim()
         };
-
         try {
             const response = await fetch(`http://${rpi_ip}:5000/status`, {
                 method: "POST",
@@ -48,7 +77,6 @@ const ControlPanel = ({
                 },
                 body: JSON.stringify(payload)
             });
-            console.log(`Experiment ${status}:`, response);
         } catch (error) {
             console.error(`Failed to set experiment ${status}:`, error);
         }
@@ -87,7 +115,7 @@ const ControlPanel = ({
                 unCheckedChildren="Walls"
             />
 
-            <div style={{ marginTop: 20 }}>
+            <div style={{marginTop: 20}}>
                 <h3>Show {viewMode === "walls" ? "Walls" : "Segments"}</h3>
                 {items.map((item) => (
                     <Checkbox
@@ -100,12 +128,28 @@ const ControlPanel = ({
                 ))}
             </div>
 
-            <div style={{ marginTop: 30 }}>
+            <div style={{marginTop: 30}}>
                 <h3>Midspans</h3>
                 Logic to control the midspans
             </div>
 
-            <div style={{ marginTop: 30 }}>
+            <div style={{marginTop: 30}}>
+                <h3>Tile Display Data</h3>
+                <select
+                    value={selectedField || ""}
+                    onChange={(e) => setSelectedDisplayField(e.target.value)}
+                    style={{width: "100%", padding: "8px", fontSize: "14px"}}
+                >
+                    <option value="" disabled>Select data to display on tiles</option>
+                    {availableFields.map((field) => (
+                        <option key={field} value={field}>
+                            {field}
+                        </option>
+                    ))}
+                </select>
+            </div>
+
+            <div style={{marginTop: 30}}>
                 <h3>Experiments</h3>
                 <Switch
                     checked={experimentEnabled}
@@ -115,12 +159,12 @@ const ControlPanel = ({
                 />
 
                 {showUpdateNotice && (
-                    <Text type="warning" style={{ fontStyle: "italic", marginTop: 10, display: "block" }}>
+                    <Text type="warning" style={{fontStyle: "italic", marginTop: 10, display: "block"}}>
                         Updating may take up to 10 seconds...
                     </Text>
                 )}
 
-                <div style={{ marginTop: 10, display: "flex", gap: "10px" }}>
+                <div style={{marginTop: 10, display: "flex", gap: "10px"}}>
                     <Input
                         placeholder="Enter experiment message to inform your colleagues (optional)"
                         value={experimentInput}

@@ -3,7 +3,7 @@ import RpiCell from "./RpiCell";
 import {Button, Switch} from "antd";
 import { PoweroffOutlined } from "@ant-design/icons";
 
-const Segment = ({ segmentLabel, segmentData, updateTile, toggleSegment }) => {
+const Segment = ({ segmentLabel, segmentData, updateTile, toggleSegment,selectedDisplayField }) => {
     if (!segmentData || !segmentData.tiles) {
         return <div>Loading {segmentLabel}...</div>;
     }
@@ -71,6 +71,7 @@ const Segment = ({ segmentLabel, segmentData, updateTile, toggleSegment }) => {
                                             wallName={segmentLabel}
                                             updateTile={updateTile}
                                             disabled={!segmentData.active} // Disable tiles if inactive
+                                            selectedDisplayField={selectedDisplayField}
                                         />
                                     ) : (
                                         <div key={tileKey} style={{height: "40px"}}></div>

@@ -2,7 +2,7 @@ import React from "react";
 import RpiCell from "./RpiCell";
 import { Button } from "antd";
 
-const Wall = ({ wallName, wallData, updateTile, faultyCount, showOnlyFaulty }) => {
+const Wall = ({ wallName, wallData, updateTile, faultyCount, showOnlyFaulty,selectedDisplayField }) => {
     if (!wallData || !wallData.tiles) {
         return <div>Loading {wallName}...</div>;
     }
@@ -41,7 +41,7 @@ const Wall = ({ wallName, wallData, updateTile, faultyCount, showOnlyFaulty }) =
             {useSimpleLayout ? (
                 <div style={{ display: "flex", flexWrap: "wrap", gap: "10px", justifyContent: "center" }}>
                     {Object.values(tiles).map(tile => (
-                        <RpiCell key={tile.id} tile={tile} updateTile={updateTile} />
+                        <RpiCell key={tile.id} tile={tile} updateTile={updateTile} selectedDisplayField={selectedDisplayField} />
                     ))}
                 </div>
             ) : (
@@ -64,7 +64,7 @@ const Wall = ({ wallName, wallData, updateTile, faultyCount, showOnlyFaulty }) =
                             {cols.map(colLabel => {
                                 const tileKey = `${colLabel}${rowLabel}`;
                                 return tiles[tileKey] ? (
-                                    <RpiCell key={tileKey} tile={tiles[tileKey]} updateTile={updateTile} />
+                                    <RpiCell key={tileKey} tile={tiles[tileKey]} updateTile={updateTile} selectedDisplayField={selectedDisplayField} />
                                 ) : (
                                     <div key={tileKey} style={{ height: "40px" }}></div>
                                 );

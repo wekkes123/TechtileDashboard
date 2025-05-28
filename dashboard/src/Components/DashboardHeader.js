@@ -38,12 +38,12 @@ const DashboardHeader = ({ setOpen,showExtra, setShowExtra, statusJson }) => {
                     height: "70px"
                 }}
             >
-                {/* Left: Dashboard title */}
+                {/* dashboard title */}
                 <div style={{ color: "white", fontSize: "20px", fontWeight: "bold" }}>
                     Dashboard
                 </div>
 
-                {/* Center: Experiment message */}
+                {/* experiment message */}
                 <div style={{
                     position: "absolute",
                     left: "50%",
@@ -57,7 +57,7 @@ const DashboardHeader = ({ setOpen,showExtra, setShowExtra, statusJson }) => {
                     {active && experimentMessage === "" && `An experiment is currently active`}
                 </div>
 
-                {/* Right: Buttons */}
+                {/* buttons */}
                 <div style={{ display: "flex", gap: "8px" }}>
                     <Button
                         type="default"

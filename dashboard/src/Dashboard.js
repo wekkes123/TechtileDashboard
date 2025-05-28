@@ -235,6 +235,7 @@ const Dashboard = () => {
         status: "active",
         message: "Temperature test running"
     });
+    const [selectedDisplayField, setSelectedDisplayField] = useState("cpuTemp");
 
     const showGraphForTile = (tileId) => {
         setSelectedTileId(tileId);
@@ -809,6 +810,7 @@ const Dashboard = () => {
                                 wallData={wallData}
                                 updateTile={updateTile}
                                 faultyCount={Object.values(wallData.tiles).filter(t => t.status.value === "faulty").length}
+                                selectedDisplayField={selectedDisplayField}
                             />
                         ))
                     : Object.entries(segments)
@@ -820,6 +822,7 @@ const Dashboard = () => {
                                 segmentData={segmentData}
                                 updateTile={updateTile}
                                 faultyCount={Object.values(segmentData.tiles).filter(t => t.status.value === "faulty").length}
+                                selectedDisplayField={selectedDisplayField}
                             />
                         ))}
 
@@ -873,6 +876,8 @@ const Dashboard = () => {
                     setVisibleItems={setVisibleItems}
                     rpi_ip={rpi_ip}
                     activity={activity}
+                    tiles={tiles}
+                    setSelectedDisplayField={setSelectedDisplayField}
                 />
 
                 <InfoBar/>

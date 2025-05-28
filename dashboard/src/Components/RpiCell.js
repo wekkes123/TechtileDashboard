@@ -3,7 +3,7 @@ import {Card, Button, Modal, Tag, Tooltip} from "antd";
 import { useState } from "react";
 import {useGraph} from "../Dashboard";
 
-const RpiCell = ({ tile, wallName, updateTile }) => {
+const RpiCell = ({ tile, wallName, updateTile, selectedDisplayField }) => {
     const [modalOpen, setModalOpen] = useState(false);
     const [now, setNow] = useState(Date.now());
     const { showGraphForTile } = useGraph();
@@ -78,7 +78,7 @@ const RpiCell = ({ tile, wallName, updateTile }) => {
                     cursor: "pointer"
                 }}
             >
-                {tile.id} ({tile.data?.cpuTemp?.value ?? "N/A"}°)
+                {tile.id} ({tile.data?.[selectedDisplayField]?.value ?? "N/A"}{selectedDisplayField === "cpuTemp" ? "°" : ""})
             </Card>
             <Modal
                 title={`Tile: ${tile.id} (last updated ${timeSince(tile.last_received)})`}
