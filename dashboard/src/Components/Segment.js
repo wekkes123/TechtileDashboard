@@ -23,12 +23,12 @@ const Segment = ({ segmentLabel, segmentData, updateTile, toggleSegment }) => {
     };
 
     return (
-        <div style={{marginBottom: "20px", border: "1px solid #ddd", padding: "10px", borderRadius: "8px"}}>
+        <div style={{border: "1px solid #ddd", padding: "10px", borderRadius: "8px"}}>
             <h2 style={{textAlign: "center"}}>{segmentLabel}</h2>
 
             <div style={{
                 textAlign: "center",
-                marginBottom: "10px",
+
                 display: "flex",
                 justifyContent: "center",
                 gap: "10px"
@@ -45,7 +45,8 @@ const Segment = ({ segmentLabel, segmentData, updateTile, toggleSegment }) => {
             <div
                 style={{
                     display: "grid",
-                    gridTemplateColumns: "repeat(10, 1fr)", // 10 columns per row
+                    gridTemplateColumns: "repeat(8, 1fr)",
+                    maxWidth: "48vw",
                     gridAutoRows: "1fr",
                     gap: "10px",
                     justifyItems: "center",

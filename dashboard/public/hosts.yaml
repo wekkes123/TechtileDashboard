@@ -3,7 +3,7 @@ all:
   vars:
     ansible_user: pi
     ansible_python_interpreter: /usr/bin/python3
-    api_ip: 127.0.0.1
+    api_ip: 10.128.48.5
     midspans:
       midspan-001:
         hostname : techtile-midspan-01

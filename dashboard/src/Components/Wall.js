@@ -20,7 +20,7 @@ const Wall = ({ wallName, wallData, updateTile }) => {
     };
 
     return (
-        <div style={{ marginBottom: "20px", border: "1px solid #ddd", padding: "10px", borderRadius: "8px" }}>
+        <div style={{border: "1px solid #ddd", padding: "10px", borderRadius: "8px" }}>
             <h2 style={{ textAlign: "center" }}>{wallName}</h2>
 
             <div style={{ textAlign: "center", marginBottom: "10px" }}>

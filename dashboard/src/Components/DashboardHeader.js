@@ -10,8 +10,10 @@ const DashboardHeader = ({ setOpen, debugFunctions, rpiIp, pingAllRpis, showExtr
     useEffect(() => {
         const fetchExperimentStatus = async () => {
             try {
+                console.log("attempt")
                 const response = await fetch(`http://${rpiIp}:5000/status`);
                 const json = await response.json();
+                console.log(json);
                 if (json.status === "active") {
                     setExperimentStatus("active");
                     setExperimentMessage(json.message || "");
