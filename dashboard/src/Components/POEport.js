@@ -5,10 +5,23 @@ import {Card} from "antd";
 
 const POEPort = ({ portId, portData }) => {
     return (
-        <Card>
-            <strong>Port:</strong> {portId}<br />
-            <strong>Tile:</strong> {portData.rpi}<br />
+        <Card
+            style={{
+                height: "110px",
+                width: "110px",
+                display: "flex",
+                flexDirection: "column",
+                justifyContent: "center",
+                alignItems: "center",
+                textAlign: "center"
+            }}
+        >
+            <div>
+                <strong>Port:</strong> {portId}<br />
+                <strong>Tile:</strong> {portData.rpi}
+            </div>
         </Card>
+
     );
 };
 
