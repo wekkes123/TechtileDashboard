@@ -45,7 +45,7 @@ const Segment = ({ segmentLabel, segmentData, updateTile, toggleSegment,selected
             <div
                 style={{
                     display: "grid",
-                    gridTemplateColumns: "repeat(8, 1fr)",
+                    gridTemplateColumns: "repeat(7, 1fr)",
                     maxWidth: "48vw",
                     gridAutoRows: "1fr",
                     gap: "10px",
