@@ -388,11 +388,9 @@ const Dashboard = () => {
             <Layout style={{width: open ? "50vw" : "100vw", transition: "width 0.3s ease"}}>
                 <DashboardHeader
                     setOpen={setOpen}
-                    debugFunctions={debugFunctions}
-                    rpiIp={rpi_ip}
-                    pingAllRpis={pingAllRpis}
                     showExtra={showExtra}
                     setShowExtra={setShowExtra}
+                    //statusJson={statusJson}
                 />
                 {showExtra && (
                     <div

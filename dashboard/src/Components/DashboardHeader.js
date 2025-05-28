@@ -3,33 +3,21 @@ import { Header } from "antd/es/layout/layout";
 import { Button } from "antd";
 import { MenuOutlined, DownOutlined, UpOutlined } from "@ant-design/icons";
 
-const DashboardHeader = ({ setOpen, debugFunctions, rpiIp, pingAllRpis, showExtra, setShowExtra }) => {
+const DashboardHeader = ({ setOpen,showExtra, setShowExtra, statusJson }) => {
     const [experimentStatus, setExperimentStatus] = useState("inactive");
     const [experimentMessage, setExperimentMessage] = useState("");
 
     useEffect(() => {
-        const fetchExperimentStatus = async () => {
-            try {
-                const response = await fetch(`http://${rpiIp}:5000/status`);
-                const json = await response.json();
-                if (json.status === "active") {
-                    setExperimentStatus("active");
-                    setExperimentMessage(json.message || "");
-                } else {
-                    setExperimentStatus("inactive");
-                    setExperimentMessage("");
-                }
-            } catch (err) {
-                console.error("Failed to fetch experiment status:", err);
-                setExperimentStatus("inactive");
-                setExperimentMessage("");
-            }
-        };
+        if (!statusJson) return;
 
-        fetchExperimentStatus();
-        const interval = setInterval(fetchExperimentStatus, 5000);
-        return () => clearInterval(interval);
-    }, [rpiIp]);
+        if (statusJson.status === "active") {
+            setExperimentStatus("active");
+            setExperimentMessage(statusJson.message || "");
+        } else {
+            setExperimentStatus("inactive");
+            setExperimentMessage("");
+        }
+    }, [statusJson]);
 
     const active = experimentStatus === "active";
 
@@ -69,6 +57,7 @@ const DashboardHeader = ({ setOpen, debugFunctions, rpiIp, pingAllRpis, showExtr
                     {active && experimentMessage === "" && `An experiment is currently active`}
                 </div>
 
+                {/* Right: Buttons */}
                 <div style={{ display: "flex", gap: "8px" }}>
                     <Button
                         type="default"
