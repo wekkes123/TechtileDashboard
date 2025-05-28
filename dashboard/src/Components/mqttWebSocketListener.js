@@ -33,6 +33,7 @@ export function generateMockData(handlers = {}) {
         "midspan/poepoort",
         "pdu/data",
         "server/data",
+        "experiment"
     ];
 
     client.on("connect", () => {

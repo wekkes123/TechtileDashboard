@@ -231,6 +231,10 @@ const Dashboard = () => {
     const [showOnlyFaulty, setShowOnlyFaulty] = useState(false);
     const [selectedTileId, setSelectedTileId] = useState(null);
     const [graphVisible, setGraphVisible] = useState(false);
+    const [statusJson, setStatusJson] = useState({
+        status: "active",
+        message: "Temperature test running"
+    });
 
     const showGraphForTile = (tileId) => {
         setSelectedTileId(tileId);
@@ -695,6 +699,14 @@ const Dashboard = () => {
         }
     };
 
+    const handleStatusMessage = async (data) => {
+        try {
+            setStatusJson(data)
+        } catch (error) {
+            console.error("Error processing status data:", error);
+        }
+    };
+
     useEffect(() => {
         const timer = setTimeout(() => {
             pingAllRpis();
@@ -724,6 +736,9 @@ const Dashboard = () => {
             "server/data": (data) => {
                 Promise.resolve().then(() => handleServerMessage(data));
             },
+            "experiment": (data) => {
+                Promise.resolve().then(() => handleStatusMessage(data));
+            },
         });
 
         return cleanup;
@@ -738,7 +753,7 @@ const Dashboard = () => {
                     setOpen={setOpen}
                     showExtra={showExtra}
                     setShowExtra={setShowExtra}
-                    //statusJson={statusJson}
+                    statusJson={statusJson}
                 />
                 {showExtra && (
                     <div
