@@ -191,7 +191,6 @@ def update_api_ip_in_yaml(ip, path="hosts.yaml"):
         print("Failed to update YAML:", e)
 
 
-# Background cleanup of expired requests (optional)
 def cleanup_pending_requests():
     while True:
         time.sleep(30)

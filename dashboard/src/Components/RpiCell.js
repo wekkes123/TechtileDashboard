@@ -1,10 +1,12 @@
 import React, {useEffect} from "react";
 import {Card, Button, Modal, Tag, Tooltip} from "antd";
 import { useState } from "react";
+import {useGraph} from "../Dashboard";
 
 const RpiCell = ({ tile, wallName, updateTile }) => {
     const [modalOpen, setModalOpen] = useState(false);
     const [now, setNow] = useState(Date.now());
+    const { showGraphForTile } = useGraph();
 
     const openModal = () => setModalOpen(true);
     const closeModal = () => setModalOpen(false);
@@ -132,6 +134,12 @@ const RpiCell = ({ tile, wallName, updateTile }) => {
                             style={{ backgroundColor: "#d9d9d9", color: "rgba(0,0,0,0.65)" }}
                         >
                             Deactivate
+                        </Button>
+                        <Button
+                            onClick={() => showGraphForTile(tile.id)}
+                            style={{ backgroundColor: "#722ed1"}}
+                        >
+                            Show Graph
                         </Button>
                     </div>
                 </div>
