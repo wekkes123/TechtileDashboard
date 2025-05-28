@@ -80,6 +80,7 @@ function generateTiles(wallOrSegmentName, cellData) {
 const Dashboard = () => {
     const [rpiCells, setRpiCells] = useState({});
     const [midspans, setMidspans] = useState({});
+    const [midspanConnections, setMidspanConnections] = useState({});
     const [wallNames, setWallNames] = useState({});
     const [open, setOpen] = useState(false);
     const [viewMode, setViewMode] = useState("walls")
@@ -156,6 +157,7 @@ const Dashboard = () => {
 
                 const allCells = {};
                 const midspanConfig = data.all.vars.midspans;
+                const midspanConnections = data.hosts;
                 const fetchedWallNames = data.all.children.rpis.children;
 
                 // Process walls and segments using the same base cell data
@@ -197,6 +199,7 @@ const Dashboard = () => {
 
                 setRpiCells(allCells);
                 setMidspans(midspanConfig);
+                setMidspanConnections(midspanConnections)
                 setWallNames(fetchedWallNames);
             })
             .catch((error) => console.error("Failed to load hosts.yaml:", error));
