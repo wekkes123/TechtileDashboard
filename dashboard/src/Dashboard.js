@@ -90,7 +90,6 @@ const Dashboard = () => {
     const [showExtra, setShowExtra] = useState(false);
     const [showOnlyFaulty, setShowOnlyFaulty] = useState(false);
 
-
     const [selectedTileId, setSelectedTileId] = useState(null);
     const [graphVisible, setGraphVisible] = useState(false);
 
@@ -140,6 +139,7 @@ const Dashboard = () => {
 
     const walls = getTilesByCategory("walls", showOnlyFaulty ? (tile) => tile.status?.value === "faulty" : undefined);
     const segments = getTilesByCategory("segments", showOnlyFaulty ? (tile) => tile.status?.value === "faulty" : undefined);
+    const faultyCount = Object.values(tiles).filter(tile => tile.status?.value === "faulty").length;
 
     useEffect(() => {
         fetchHosts()
@@ -395,7 +395,7 @@ const Dashboard = () => {
                             onClick={() => setShowOnlyFaulty(prev => !prev)}
                             style={{ backgroundColor: "lightblue", color: "rgba(1,1,1,1)" }}
                         >
-                            {showOnlyFaulty ? "Show All Tiles" : "Show Only Faulty"}
+                            {showOnlyFaulty ? "Show All Tiles" : `Show Only Faulty (${faultyCount})`}
                         </Button>
                     </div>
                 )}
@@ -411,19 +411,32 @@ const Dashboard = () => {
                     }}
                 >
                     {viewMode === "walls"
-                        ? Object.entries(walls)
-                            .filter(([name]) => visibleItems.includes(name))  // Only show checked walls
-                            .map(([wallName, wallData]) => (
-                                <Wall key={wallName} wallName={wallName} wallData={wallData} updateTile={updateTile}/>
-                            ))
-                        : Object.entries(segments)
-                            .filter(([name]) => visibleItems.includes(name))  // Only show checked segments
-                            .map(([segmentLabel, segmentData]) => (
-                                <Segment key={segmentLabel} segmentLabel={segmentLabel} segmentData={segmentData} updateTile={updateTile} />
-                            ))}
+                    ? Object.entries(walls)
+                        .filter(([name]) => visibleItems.includes(name))
+                        .map(([wallName, wallData]) => (
+                            <Wall
+                                key={wallName}
+                                wallName={wallName}
+                                wallData={wallData}
+                                updateTile={updateTile}
+                                faultyCount={Object.values(wallData.tiles).filter(t => t.status.value === "faulty").length}
+                            />
+                        ))
+                    : Object.entries(segments)
+                        .filter(([name]) => visibleItems.includes(name))
+                        .map(([segmentLabel, segmentData]) => (
+                            <Segment
+                                key={segmentLabel}
+                                segmentLabel={segmentLabel}
+                                segmentData={segmentData}
+                                updateTile={updateTile}
+                                faultyCount={Object.values(segmentData.tiles).filter(t => t.status.value === "faulty").length}
+                            />
+                        ))
+                }
+
                 </Content>
             </Layout>
-
 
             <ControlPanel
                 open={open}

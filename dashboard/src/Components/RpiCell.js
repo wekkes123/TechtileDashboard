@@ -72,6 +72,8 @@ const RpiCell = ({ tile, wallName, updateTile }) => {
                 onClick={openModal}
                 style={{
                     background: getBackgroundColor(),
+                    maxWidth: "120px",
+                    maxHeight: "120px",
                     textAlign: "center",
                     cursor: "pointer"
                 }}

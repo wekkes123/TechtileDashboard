@@ -14,7 +14,7 @@ const Segment = ({ segmentLabel, segmentData, updateTile, toggleSegment }) => {
     // Extract unique columns and rows dynamically
     const cols = [...new Set(tileKeys.map(key => key.charAt(0)))].sort();
     const rows = [...new Set(tileKeys.map(key => key.slice(1)))].sort();
-    const cellsPerRow = Math.ceil(rows.length / 2 - 1);
+    const cellsPerRow = Math.max(1, Math.ceil(rows.length / 2 - 1));
 
     const setSegmentStatus = (status) => {
         Object.keys(tiles).forEach(tileId => {
