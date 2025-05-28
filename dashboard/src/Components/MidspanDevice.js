@@ -3,10 +3,9 @@
 import React from "react";
 import POEPort from "./POEport";
 import { Collapse } from "antd";
-import { Card } from "antd";
 
-const MidspanDevice = ({ midspanId, midspanData, ports }) => {
-    const { Panel } = Collapse;
+const MidspanDevice = ({ midspanId, midspanData, midspanRuntimeData, ports }) => {
+   const { Panel } = Collapse;
     return (
         <div style={{marginBottom: "20px", border: "1px solid #ddd", padding: "10px", borderRadius: "8px",}}>
             <h2 style={{textAlign: "center"}}>{midspanId}</h2>
@@ -20,11 +19,24 @@ const MidspanDevice = ({ midspanId, midspanData, ports }) => {
                 </Panel>
             </Collapse>
 
+            {midspanRuntimeData && (
+                <div>
+                    <h3>Runtime Data</h3>
+                    {Object.entries(midspanRuntimeData.data || {}).map(([key, valueObj]) => (
+                        <p key={key}><strong>{key}:</strong> {valueObj.value}</p>
+                    ))}
+                    <p><strong>Last Received:</strong> {new Date(midspanRuntimeData.last_received).toLocaleString()}</p>
+                </div>
+            )}
+
+            <div>
+                <h3>POE Ports</h3>
             <h3>POE Ports</h3>
             <div style={{display: "flex", flexWrap: "wrap"}}>
                 {ports && Object.entries(ports).map(([portId, portData]) => (
                     <POEPort key={portId} portId={portId} portData={portData}/>
                 ))}
+            </div>
             </div>
         </div>
 
