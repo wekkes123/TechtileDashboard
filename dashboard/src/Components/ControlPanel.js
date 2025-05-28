@@ -1,5 +1,7 @@
-import { Drawer, Switch, Checkbox, Input, Button } from "antd";
+import { Drawer, Switch, Checkbox, Input, Button, Typography } from "antd";
 import { useEffect, useState } from "react";
+
+const { Text } = Typography;
 
 const ControlPanel = ({
                           open,
@@ -15,6 +17,7 @@ const ControlPanel = ({
                       }) => {
     const [experimentEnabled, setExperimentEnabled] = useState(false);
     const [experimentInput, setExperimentInput] = useState("");
+    const [showUpdateNotice, setShowUpdateNotice] = useState(false);
 
     useEffect(() => {
         setExperimentEnabled(activity);
@@ -53,6 +56,7 @@ const ControlPanel = ({
 
     const handleExperimentToggle = async (checked) => {
         setExperimentEnabled(checked);
+        handleInteraction();
         if (checked) {
             await sendExperimentStatus("active", experimentInput);
         } else {
@@ -61,7 +65,13 @@ const ControlPanel = ({
     };
 
     const handleExperimentSubmit = async () => {
+        handleInteraction();
         await sendExperimentStatus("active", experimentInput);
+    };
+
+    const handleInteraction = () => {
+        setShowUpdateNotice(true);
+        setTimeout(() => setShowUpdateNotice(false), 10000);
     };
 
     return (
@@ -90,7 +100,7 @@ const ControlPanel = ({
                 ))}
             </div>
 
-            <div style={{ marginTop: 30}}>
+            <div style={{ marginTop: 30 }}>
                 <h3>Midspans</h3>
                 Logic to control the midspans
             </div>
@@ -104,11 +114,20 @@ const ControlPanel = ({
                     unCheckedChildren="Off"
                 />
 
+                {showUpdateNotice && (
+                    <Text type="warning" style={{ fontStyle: "italic", marginTop: 10, display: "block" }}>
+                        Updating may take up to 10 seconds...
+                    </Text>
+                )}
+
                 <div style={{ marginTop: 10, display: "flex", gap: "10px" }}>
                     <Input
                         placeholder="Enter experiment message to inform your colleagues (optional)"
                         value={experimentInput}
-                        onChange={(e) => setExperimentInput(e.target.value)}
+                        onChange={(e) => {
+                            setExperimentInput(e.target.value);
+                            handleInteraction();
+                        }}
                         disabled={!experimentEnabled}
                     />
                     <Button
