@@ -233,6 +233,7 @@ const Dashboard = () => {
         if (visibleItems.length === 0) {
             const newItems = viewMode === "walls" ? Object.keys(walls) : Object.keys(segments);
             setVisibleItems(newItems);
+            console.log("visible items", newItems)
         }
     }, [viewMode, walls, segments]);
 
@@ -449,14 +450,42 @@ const Dashboard = () => {
                                 <Segment key={segmentLabel} segmentLabel={segmentLabel} segmentData={segmentData} updateTile={updateTile} />
                             ))}
 
-                    {Object.entries(midspans).map(([midspanId, midspanData]) => (
-                        <MidspanDevice
-                            key={midspanId}
-                            midspanId={midspanId}
-                            midspanData={midspanData}
-                            ports={midspanPorts[midspanId] || {}}
-                        />
-                    ))}
+                    {Object.entries(midspans).map(([midspanId, midspanData]) => {
+                        const allVisibleTileIds = new Set();
+
+                        // Gather visible tile IDs
+                        const source = viewMode === "walls" ? walls : segments;
+                        visibleItems.forEach(name => {
+                            const tileGroup = source[name];
+                            if (tileGroup) {
+                                Object.keys(tileGroup.tiles).forEach(tileId => {
+                                    allVisibleTileIds.add(tileId);
+                                });
+                            }
+                        });
+
+                        // Filter ports based on visible tile IDs
+                        const filteredPorts = {};
+                        const ports = midspanPorts[midspanId] || {};
+                        Object.entries(ports).forEach(([portId, portInfo]) => {
+                            if (allVisibleTileIds.has(portInfo.rpi)) {
+                                filteredPorts[portId] = portInfo;
+                            }
+                        });
+
+                        // Only render midspan if it has relevant ports
+                        if (Object.keys(filteredPorts).length === 0) return null;
+
+                        return (
+                            <MidspanDevice
+                                key={midspanId}
+                                midspanId={midspanId}
+                                midspanData={midspanData}
+                                ports={filteredPorts}
+                            />
+                        );
+                    })}
+
 
 
                 </Content>
