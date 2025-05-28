@@ -10,6 +10,7 @@ import DashboardHeader from "./Components/DashboardHeader";
 import yaml from "js-yaml";
 import pingRpi from './Components/PingRpi';
 import GraphPage from "./Components/GraphPage";
+import MidspanDevice from "./Components/MidspanDevice";
 
 const { Header, Content, Footer } = Layout;
 //todo yaml needs real ip
@@ -81,6 +82,7 @@ const Dashboard = () => {
     const [rpiCells, setRpiCells] = useState({});
     const [midspans, setMidspans] = useState({});
     const [midspanConnections, setMidspanConnections] = useState({});
+    const [midspanPorts, setMidspanPorts] = useState({});
     const [wallNames, setWallNames] = useState({});
     const [open, setOpen] = useState(false);
     const [viewMode, setViewMode] = useState("walls")
@@ -157,7 +159,7 @@ const Dashboard = () => {
 
                 const allCells = {};
                 const midspanConfig = data.all.vars.midspans;
-                const midspanConnections = data.hosts;
+                const midspanConnectionsConfig = data.all.hosts;
                 const fetchedWallNames = data.all.children.rpis.children;
 
                 // Process walls and segments using the same base cell data
@@ -199,12 +201,37 @@ const Dashboard = () => {
 
                 setRpiCells(allCells);
                 setMidspans(midspanConfig);
-                setMidspanConnections(midspanConnections)
+                console.log("Config:", midspanConnectionsConfig)
+                setMidspanConnections(midspanConnectionsConfig)
                 setWallNames(fetchedWallNames);
             })
             .catch((error) => console.error("Failed to load hosts.yaml:", error));
     }, []);
 
+    useEffect(() => {
+        const midspanPortsConfig = {};
+        if (midspanConnections){
+            console.log("Connections: ", midspanConnections)
+            Object.entries(midspanConnections).forEach(([rpiId, rpiData]) => {
+                const poeInfo = rpiData["poe-port"];
+                const midspanInfo = rpiData["midspan"]
+
+                if (!midspanPortsConfig[midspanInfo]){
+                    midspanPortsConfig[midspanInfo] = {};
+                }
+
+                midspanPortsConfig[midspanInfo][poeInfo] = {
+                    power: "N/A",
+                    status: "unknown",
+                    voltage: "N/A",
+                    rpi: rpiId,
+                };
+            });
+
+            setMidspanPorts(midspanPortsConfig)
+        }
+        console.log("connections:", midspanPortsConfig)
+    }, [midspanConnections]);
 
 
     useEffect(() => {
@@ -427,6 +454,17 @@ const Dashboard = () => {
                             .map(([segmentLabel, segmentData]) => (
                                 <Segment key={segmentLabel} segmentLabel={segmentLabel} segmentData={segmentData} updateTile={updateTile} />
                             ))}
+
+                    {Object.entries(midspans).map(([midspanId, midspanData]) => (
+                        <MidspanDevice
+                            key={midspanId}
+                            midspanId={midspanId}
+                            midspanData={midspanData}
+                            ports={midspanPorts[midspanId] || {}}
+                        />
+                    ))}
+
+
                 </Content>
             </Layout>
 

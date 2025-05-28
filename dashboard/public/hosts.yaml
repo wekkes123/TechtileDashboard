@@ -3,7 +3,7 @@ all:
   vars:
     ansible_user: pi
     ansible_python_interpreter: /usr/bin/python3
-    api_ip: 127.0.0.1
+    api_ip: 10.128.48.5
     midspans:
       midspan-001:
         hostname : techtile-midspan-01
@@ -47,7 +47,7 @@ all:
         type: PD-9612GC
         label: MS7
         nr-ports: 12
-      midspan-08:
+      midspan-008:
         hostname: techtile-midspan-08
         ip: 192.108.0.11
         type: PD-9612GC
@@ -129,7 +129,7 @@ all:
       midspan: midspan-005
       poe-port: 9
     G14:
-      ansible_hot: rpi-g14.local
+      ansible_host: rpi-g14.local
       midspan: midspan-005
       poe-port: 10
     G15:
