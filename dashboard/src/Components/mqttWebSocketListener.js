@@ -2,7 +2,7 @@ import mqtt from "mqtt";
 
 const MQTT_BROKER = "ws://10.128.48.5:8081"; // Secure WebSocket URL
 
-export function generateMockData(handleMessage) {
+export function generateMockData(handlers = {}) {
     //this generates dummy data
     /*const interval = 100; // Adjust this value to control the speed (milliseconds)
 
@@ -27,20 +27,34 @@ export function generateMockData(handleMessage) {
         clean: true,
     });
 
+    const topics = [
+        "rpi/data",
+        "midspan/data",
+        "midspan/poepoort",
+        "pdu/data",
+        "server/data",
+    ];
+
     client.on("connect", () => {
         console.log("Connected to MQTT broker");
-        client.subscribe("rpi/data", (err) => {
-            if (!err) {
-                console.log("Subscribed to rpi/data");
-            }
+        topics.forEach((topic) => {
+            client.subscribe(topic, (err) => {
+                if (!err) {
+                    console.log(`Subscribed to ${topic}`);
+                }
+            });
         });
     });
 
     client.on("message", (topic, message) => {
         try {
-            const data = JSON.parse(message.toString()); // Parse JSON
-            console.log(`Received aaaaaaaaaaaaa:`, topic);
-            handleMessage(data); // Pass to Dashboard function
+            const data = JSON.parse(message.toString());
+            const handler = handlers[topic];
+            if (handler) {
+                handler(data);
+            } else {
+                console.warn(`No handler for topic: ${topic}`);
+            }
         } catch (error) {
             console.error("Error parsing message:", error);
         }
@@ -49,6 +63,7 @@ export function generateMockData(handleMessage) {
     client.on("error", (err) => {
         console.error("MQTT Connection Error:", err);
     });
+
 
     return () => client.end();
 }

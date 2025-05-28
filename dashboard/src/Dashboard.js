@@ -13,6 +13,7 @@ import GraphPage from "./Components/GraphPage";
 import MidspanDevice from "./Components/MidspanDevice";
 
 const { Header, Content, Footer } = Layout;
+
 async function fetchHosts() {
     const response = await fetch("/hosts.yaml");
     const text = await response.text();
@@ -49,9 +50,148 @@ const tilesReducer = (state, action) => {
                     ...state[action.payload.tileId],
                     value: 0,
                     metadata: {},
-                    status: "working" // Changed from isActive: true
+                    status: "working"
                 }
             };
+
+        default:
+            return state;
+    }
+};
+
+// Midspan reducer for state management
+const midspanReducer = (state, action) => {
+    switch (action.type) {
+        case 'UPDATE_MIDSPAN':
+            const { midspanId, updates } = action.payload;
+            return {
+                ...state,
+                [midspanId]: {
+                    ...state[midspanId],
+                    ...updates,
+                    last_received: Date.now()
+                }
+            };
+
+        case 'BULK_UPDATE_MIDSPANS':
+            const updatedState = { ...state };
+            action.payload.forEach(({ midspanId, updates }) => {
+                updatedState[midspanId] = {
+                    ...updatedState[midspanId],
+                    ...updates,
+                    last_received: Date.now()
+                };
+            });
+            return updatedState;
+
+        case 'RESET_MIDSPAN':
+            return {
+                ...state,
+                [action.payload.midspanId]: {
+                    ...state[action.payload.midspanId],
+                    data: {},
+                    status: "working"
+                }
+            };
+
+        default:
+            return state;
+    }
+};
+
+// POE Ports reducer for state management
+const poePortsReducer = (state, action) => {
+    switch (action.type) {
+        case 'UPDATE_POE_PORT':
+            const { midspanId, portId, updates } = action.payload;
+            return {
+                ...state,
+                [midspanId]: {
+                    ...state[midspanId],
+                    [portId]: {
+                        ...state[midspanId]?.[portId],
+                        ...updates,
+                        last_received: Date.now()
+                    }
+                }
+            };
+
+        case 'BULK_UPDATE_POE_PORTS':
+            const updatedState = { ...state };
+            action.payload.forEach(({ midspanId, portId, updates }) => {
+                if (!updatedState[midspanId]) {
+                    updatedState[midspanId] = {};
+                }
+                updatedState[midspanId][portId] = {
+                    ...updatedState[midspanId][portId],
+                    ...updates,
+                    last_received: Date.now()
+                };
+            });
+            return updatedState;
+
+        case 'INITIALIZE_POE_PORTS':
+            return action.payload;
+
+        default:
+            return state;
+    }
+};
+
+// PDU reducer for state management
+const pduReducer = (state, action) => {
+    switch (action.type) {
+        case 'UPDATE_PDU':
+            const { pduId, updates } = action.payload;
+            return {
+                ...state,
+                [pduId]: {
+                    ...state[pduId],
+                    ...updates,
+                    last_received: Date.now()
+                }
+            };
+
+        case 'BULK_UPDATE_PDUS':
+            const updatedState = { ...state };
+            action.payload.forEach(({ pduId, updates }) => {
+                updatedState[pduId] = {
+                    ...updatedState[pduId],
+                    ...updates,
+                    last_received: Date.now()
+                };
+            });
+            return updatedState;
+
+        default:
+            return state;
+    }
+};
+
+// Server reducer for state management
+const serverReducer = (state, action) => {
+    switch (action.type) {
+        case 'UPDATE_SERVER':
+            const { serverId, updates } = action.payload;
+            return {
+                ...state,
+                [serverId]: {
+                    ...state[serverId],
+                    ...updates,
+                    last_received: Date.now()
+                }
+            };
+
+        case 'BULK_UPDATE_SERVERS':
+            const updatedState = { ...state };
+            action.payload.forEach(({ serverId, updates }) => {
+                updatedState[serverId] = {
+                    ...updatedState[serverId],
+                    ...updates,
+                    last_received: Date.now()
+                };
+            });
+            return updatedState;
 
         default:
             return state;
@@ -76,22 +216,19 @@ function generateTiles(wallOrSegmentName, cellData) {
     return Tiles;
 }
 
-
 const Dashboard = () => {
     const [rpiCells, setRpiCells] = useState({});
     const [midspans, setMidspans] = useState({});
     const [midspanConnections, setMidspanConnections] = useState({});
-    const [midspanPorts, setMidspanPorts] = useState({});
     const [wallNames, setWallNames] = useState({});
     const [open, setOpen] = useState(false);
     const [viewMode, setViewMode] = useState("walls")
     const [visibleItems, setVisibleItems] = useState([]);
-    const [rpi_ip,setrpi_ip] = useState("10.128.48.5");
-    const [activity,setActivity] = useState(false);
+    const [rpi_ip, setrpi_ip] = useState("10.128.48.5");
+    const [activity, setActivity] = useState(false);
     const [openHeader, setOpenHeader] = useState(false);
     const [showExtra, setShowExtra] = useState(false);
     const [showOnlyFaulty, setShowOnlyFaulty] = useState(false);
-
     const [selectedTileId, setSelectedTileId] = useState(null);
     const [graphVisible, setGraphVisible] = useState(false);
 
@@ -99,25 +236,47 @@ const Dashboard = () => {
         setSelectedTileId(tileId);
         setGraphVisible(true);
     };
-        // Initialize tiles state with useReducer
+
+    // Initialize all reducers
     const [tiles, dispatchTiles] = useReducer(tilesReducer, {});
+    const [midspanData, dispatchMidspan] = useReducer(midspanReducer, {});
+    const [poePortsData, dispatchPoePorts] = useReducer(poePortsReducer, {});
+    const [pduData, dispatchPdu] = useReducer(pduReducer, {});
+    const [serverData, dispatchServer] = useReducer(serverReducer, {});
 
     const tilesRef = useRef(tiles);
+    const midspanDataRef = useRef(midspanData);
+    const poePortsDataRef = useRef(poePortsData);
+    const pduDataRef = useRef(pduData);
+    const serverDataRef = useRef(serverData);
 
     useEffect(() => {
         tilesRef.current = tiles;
     }, [tiles]);
 
+    useEffect(() => {
+        midspanDataRef.current = midspanData;
+    }, [midspanData]);
+
+    useEffect(() => {
+        poePortsDataRef.current = poePortsData;
+    }, [poePortsData]);
+
+    useEffect(() => {
+        pduDataRef.current = pduData;
+    }, [pduData]);
+
+    useEffect(() => {
+        serverDataRef.current = serverData;
+    }, [serverData]);
+
     const normalizeTileId = (id) => {
         const match = id.match(/^([A-Z])(\d+)$/i);
-        if (!match) return id; // fallback to original if it doesn't match the pattern
+        if (!match) return id;
 
         const [, letter, number] = match;
         return `${letter.toUpperCase()}${number.padStart(2, "0")}`;
     };
-
-
-
 
     const getTilesByCategory = (categoryType, filterFn = () => true) => {
         const categorizedTiles = {};
@@ -161,7 +320,6 @@ const Dashboard = () => {
                 Object.entries(data.all.children).forEach(([key, cellData]) => {
                     if (!cellData.hosts) return;
 
-                    //console.log(`Processing ${key}:`, cellData.hosts);
                     const newTiles = generateTiles(key, cellData.hosts);
 
                     Object.entries(newTiles).forEach(([cellKey, cellInfo]) => {
@@ -182,8 +340,6 @@ const Dashboard = () => {
                     allCells[cellKey].walls = Array.from(allCells[cellKey].walls);
                     allCells[cellKey].segments = Array.from(allCells[cellKey].segments);
                 });
-
-                //console.log("Final processed rpiCells:", allCells);
 
                 // Initialize the tiles state with the processed cells
                 dispatchTiles({
@@ -206,12 +362,11 @@ const Dashboard = () => {
     useEffect(() => {
         const midspanPortsConfig = {};
         if (midspanConnections){
-            console.log("Connections: ", midspanConnections)
             Object.entries(midspanConnections).forEach(([rpiId, rpiData]) => {
                 const poeInfo = rpiData["poe-port"];
-                const midspanInfo = rpiData["midspan"]
+                const midspanInfo = rpiData["midspan"];
 
-                if (!midspanPortsConfig[midspanInfo]){
+                if (!midspanPortsConfig[midspanInfo]) {
                     midspanPortsConfig[midspanInfo] = {};
                 }
 
@@ -223,22 +378,21 @@ const Dashboard = () => {
                 };
             });
 
-            setMidspanPorts(midspanPortsConfig)
+            dispatchPoePorts({
+                type: 'INITIALIZE_POE_PORTS',
+                payload: midspanPortsConfig
+            });
         }
-        console.log("connections:", midspanPortsConfig)
     }, [midspanConnections]);
-
 
     useEffect(() => {
         if (visibleItems.length === 0) {
             const newItems = viewMode === "walls" ? Object.keys(walls) : Object.keys(segments);
             setVisibleItems(newItems);
-            console.log("visible items", newItems)
         }
     }, [viewMode, walls, segments]);
 
-
-    // Function to update a single tile
+    // Tile update functions
     const updateTile = (tileId, updates) => {
         dispatchTiles({
             type: 'UPDATE_TILE',
@@ -247,7 +401,6 @@ const Dashboard = () => {
         message.success(`Updated tile ${tileId}`);
     };
 
-    // Function to bulk update tiles
     const bulkUpdateTiles = (updates) => {
         dispatchTiles({
             type: 'BULK_UPDATE_TILES',
@@ -256,13 +409,44 @@ const Dashboard = () => {
         message.success(`Bulk updated ${updates.length} tiles`);
     };
 
-    // Function to reset a tile
     const resetTile = (tileId) => {
         dispatchTiles({
             type: 'RESET_TILE',
             payload: { tileId }
         });
         message.info(`Reset tile ${tileId}`);
+    };
+
+    // Midspan update functions
+    const updateMidspan = (midspanId, updates) => {
+        dispatchMidspan({
+            type: 'UPDATE_MIDSPAN',
+            payload: { midspanId, updates }
+        });
+    };
+
+    // POE Port update functions
+    const updatePoePort = (midspanId, portId, updates) => {
+        dispatchPoePorts({
+            type: 'UPDATE_POE_PORT',
+            payload: { midspanId, portId, updates }
+        });
+    };
+
+    // PDU update functions
+    const updatePdu = (pduId, updates) => {
+        dispatchPdu({
+            type: 'UPDATE_PDU',
+            payload: { pduId, updates }
+        });
+    };
+
+    // Server update functions
+    const updateServer = (serverId, updates) => {
+        dispatchServer({
+            type: 'UPDATE_SERVER',
+            payload: { serverId, updates }
+        });
     };
 
     // Debug functions for testing
@@ -325,10 +509,10 @@ const Dashboard = () => {
         }
     };
 
-    const handleMessage = async (data) => {
+    const handleRpiMessage = async (data) => {
         try {
             if (!data || typeof data !== "object") {
-                console.warn("Received invalid data:", data);
+                console.warn("Received invalid RPI data:", data);
                 return;
             }
 
@@ -358,28 +542,192 @@ const Dashboard = () => {
                 console.warn(`No tile found for ID: ${data?.id} (normalized as ${normalizedId})`);
             }
         } catch (error) {
-            console.error("Error processing data:", error);
+            console.error("Error processing RPI data:", error);
+        }
+    };
+
+    const handleMidspanMessage = async (data) => {
+        try {
+            if (!data || typeof data !== "object") {
+                console.warn("Received invalid midspan data:", data);
+                return;
+            }
+
+            const midspanId = data.id || data.midspan_id;
+            if (!midspanId) {
+                console.warn("Midspan message missing ID:", data);
+                return;
+            }
+
+            const timestamp = Date.now();
+            let processedData = {};
+
+            Object.entries(data).forEach(([key, value]) => {
+                if (key !== "id" && key !== "midspan_id") {
+                    processedData[key] = {
+                        value,
+                        timestamp
+                    };
+                }
+            });
+
+            updateMidspan(midspanId, {
+                data: {
+                    ...midspanDataRef.current[midspanId]?.data || {},
+                    ...processedData
+                }
+            });
+
+            console.log(`Updated midspan ${midspanId}:`, processedData);
+        } catch (error) {
+            console.error("Error processing midspan data:", error);
+        }
+    };
+
+    const handlePOEPortMessage = async (data) => {
+        try {
+            if (!data || typeof data !== "object") {
+                console.warn("Received invalid POE port data:", data);
+                return;
+            }
+
+            const midspanId = data.midspan_id || data.midspan;
+            const portId = data.port_id || data.port;
+
+            if (!midspanId || !portId) {
+                console.warn("POE port message missing required IDs:", data);
+                return;
+            }
+
+            const timestamp = Date.now();
+            let processedData = {};
+
+            Object.entries(data).forEach(([key, value]) => {
+                if (!['midspan_id', 'midspan', 'port_id', 'port'].includes(key)) {
+                    processedData[key] = {
+                        value,
+                        timestamp
+                    };
+                }
+            });
+
+            updatePoePort(midspanId, portId, processedData);
+
+            console.log(`Updated POE port ${midspanId}:${portId}:`, processedData);
+        } catch (error) {
+            console.error("Error processing POE port data:", error);
+        }
+    };
+
+    const handlePDUMessage = async (data) => {
+        try {
+            if (!data || typeof data !== "object") {
+                console.warn("Received invalid PDU data:", data);
+                return;
+            }
+
+            const pduId = data.id || data.pdu_id;
+            if (!pduId) {
+                console.warn("PDU message missing ID:", data);
+                return;
+            }
+
+            const timestamp = Date.now();
+            let processedData = {};
+
+            Object.entries(data).forEach(([key, value]) => {
+                if (key !== "id" && key !== "pdu_id") {
+                    processedData[key] = {
+                        value,
+                        timestamp
+                    };
+                }
+            });
+
+            updatePdu(pduId, {
+                data: {
+                    ...pduDataRef.current[pduId]?.data || {},
+                    ...processedData
+                }
+            });
+
+            console.log(`Updated PDU ${pduId}:`, processedData);
+        } catch (error) {
+            console.error("Error processing PDU data:", error);
+        }
+    };
+
+    const handleServerMessage = async (data) => {
+        try {
+            if (!data || typeof data !== "object") {
+                console.warn("Received invalid server data:", data);
+                return;
+            }
+
+            const serverId = data.id || data.server_id || data.hostname;
+            if (!serverId) {
+                console.warn("Server message missing ID:", data);
+                return;
+            }
+
+            const timestamp = Date.now();
+            let processedData = {};
+
+            Object.entries(data).forEach(([key, value]) => {
+                if (!['id', 'server_id', 'hostname'].includes(key)) {
+                    processedData[key] = {
+                        value,
+                        timestamp
+                    };
+                }
+            });
+
+            updateServer(serverId, {
+                data: {
+                    ...serverDataRef.current[serverId]?.data || {},
+                    ...processedData
+                }
+            });
+
+            console.log(`Updated server ${serverId}:`, processedData);
+        } catch (error) {
+            console.error("Error processing server data:", error);
         }
     };
 
     useEffect(() => {
         const timer = setTimeout(() => {
             pingAllRpis();
-        }, 1000); // 1000ms delay
+        }, 1000);
 
         const interval = setInterval(pingAllRpis, 100000);
         return () => {
             clearTimeout(timer);
-            clearInterval(interval);}
+            clearInterval(interval);
+        }
     }, []);
-
 
     useEffect(() => {
-        generateMockData((data) => {
-            Promise.resolve().then(() => handleMessage(data));
+        const cleanup = generateMockData({
+            "rpi/data": (data) => {
+                Promise.resolve().then(() => handleRpiMessage(data));
+            },
+            "midspan/data": (data) => {
+                Promise.resolve().then(() => handleMidspanMessage(data));
+            },
+            "midspan/poepoort": (data) => {
+                Promise.resolve().then(() => handlePOEPortMessage(data));
+            },
+            "pdu/data": (data) => {
+                Promise.resolve().then(() => handlePDUMessage(data));
+            },
+            "server/data": (data) => {
+                Promise.resolve().then(() => handleServerMessage(data));
+            },
         });
-    }, []);
 
+        return cleanup;
+    }, []);
 
     return (
         <GraphContext.Provider value={{ showGraphForTile }}>
@@ -462,84 +810,83 @@ const Dashboard = () => {
                             />
                         ))}
 
-                    {Object.entries(midspans).map(([midspanId, midspanData]) => {
-                        const allVisibleTileIds = new Set();
+                        {Object.entries(midspans).map(([midspanId, midspanConfigData]) => {
+                            const allVisibleTileIds = new Set();
 
-                        // Gather visible tile IDs
-                        const source = viewMode === "walls" ? walls : segments;
-                        visibleItems.forEach(name => {
-                            const tileGroup = source[name];
-                            if (tileGroup) {
-                                Object.keys(tileGroup.tiles).forEach(tileId => {
-                                    allVisibleTileIds.add(tileId);
-                                });
-                            }
-                        });
+                            // Gather visible tile IDs
+                            const source = viewMode === "walls" ? walls : segments;
+                            visibleItems.forEach(name => {
+                                const tileGroup = source[name];
+                                if (tileGroup) {
+                                    Object.keys(tileGroup.tiles).forEach(tileId => {
+                                        allVisibleTileIds.add(tileId);
+                                    });
+                                }
+                            });
 
-                        // Filter ports based on visible tile IDs
-                        const filteredPorts = {};
-                        const ports = midspanPorts[midspanId] || {};
-                        Object.entries(ports).forEach(([portId, portInfo]) => {
-                            if (allVisibleTileIds.has(portInfo.rpi)) {
-                                filteredPorts[portId] = portInfo;
-                            }
-                        });
+                            // Filter ports based on visible tile IDs
+                            const filteredPorts = {};
+                            const ports = poePortsData[midspanId] || {};
+                            Object.entries(ports).forEach(([portId, portInfo]) => {
+                                if (allVisibleTileIds.has(portInfo.rpi)) {
+                                    filteredPorts[portId] = portInfo;
+                                }
+                            });
 
-                        // Only render midspan if it has relevant ports
-                        if (Object.keys(filteredPorts).length === 0) return null;
+                            // Only render midspan if it has relevant ports
+                            if (Object.keys(filteredPorts).length === 0) return null;
 
-                        return (
-                            <MidspanDevice
-                                key={midspanId}
-                                midspanId={midspanId}
-                                midspanData={midspanData}
-                                ports={filteredPorts}
-                            />
-                        );
-                    })}
+                            return (
+                                <MidspanDevice
+                                    key={midspanId}
+                                    midspanId={midspanId}
+                                    midspanData={midspanConfigData}
+                                    midspanRuntimeData={midspanData[midspanId]}
+                                    ports={filteredPorts}
+                                />
+                            );
+                        })}
+                    </Content>
+                </Layout>
 
-                </Content>
+                <ControlPanel
+                    open={open}
+                    onClose={() => setOpen(false)}
+                    viewMode={viewMode}
+                    setViewMode={setViewMode}
+                    wallNames={walls}
+                    segmentNames={segments}
+                    visibleItems={visibleItems}
+                    setVisibleItems={setVisibleItems}
+                    rpi_ip={rpi_ip}
+                    activity={activity}
+                />
+
+                <InfoBar/>
+                {graphVisible && selectedTileId && (
+                    <div style={{
+                        position: 'fixed',
+                        top: 0,
+                        left: 0,
+                        height: '100vh',
+                        width: '100vw',
+                        backgroundColor: 'white',
+                        zIndex: 9999,
+                        padding: '20px',
+                        overflow: 'auto'
+                    }}>
+                        <Button
+                            type="primary"
+                            danger
+                            onClick={() => setGraphVisible(false)}
+                            style={{ position: 'absolute', top: 20, right: 20, zIndex: 10000 }}
+                        >
+                            Close
+                        </Button>
+                        <GraphPage deviceId={selectedTileId}/>
+                    </div>
+                )}
             </Layout>
-
-            <ControlPanel
-                open={open}
-                onClose={() => setOpen(false)}
-                viewMode={viewMode}
-                setViewMode={setViewMode}
-                wallNames={walls}
-                segmentNames={segments}
-                visibleItems={visibleItems}
-                setVisibleItems={setVisibleItems}
-                rpi_ip={rpi_ip}
-                activity={activity}
-            />
-
-            <InfoBar/>
-            {graphVisible && selectedTileId && (
-                <div style={{
-                    position: 'fixed',
-                    top: 0,
-                    left: 0,
-                    height: '100vh',
-                    width: '100vw',
-                    backgroundColor: 'white',
-                    zIndex: 9999,
-                    padding: '20px',
-                    overflow: 'auto'
-                }}>
-                    <Button
-                        type="primary"
-                        danger
-                        onClick={() => setGraphVisible(false)}
-                        style={{ position: 'absolute', top: 20, right: 20, zIndex: 10000 }}
-                    >
-                        Close
-                    </Button>
-                    <GraphPage deviceId={selectedTileId}/>
-                </div>
-            )}
-
-        </Layout>
         </GraphContext.Provider>
     );
 };
