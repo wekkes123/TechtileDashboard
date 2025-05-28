@@ -90,6 +90,11 @@ const ControlPanel = ({
                 ))}
             </div>
 
+            <div style={{ marginTop: 30}}>
+                <h3>Midspans</h3>
+                Logic to control the midspans
+            </div>
+
             <div style={{ marginTop: 30 }}>
                 <h3>Experiments</h3>
                 <Switch

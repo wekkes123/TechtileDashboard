@@ -10,6 +10,7 @@ import DashboardHeader from "./Components/DashboardHeader";
 import yaml from "js-yaml";
 import pingRpi from './Components/PingRpi';
 import GraphPage from "./Components/GraphPage";
+import MidspanDevice from "./Components/MidspanDevice";
 
 const { Header, Content, Footer } = Layout;
 async function fetchHosts() {
@@ -80,6 +81,7 @@ const Dashboard = () => {
     const [rpiCells, setRpiCells] = useState({});
     const [midspans, setMidspans] = useState({});
     const [midspanConnections, setMidspanConnections] = useState({});
+    const [midspanPorts, setMidspanPorts] = useState({});
     const [wallNames, setWallNames] = useState({});
     const [open, setOpen] = useState(false);
     const [viewMode, setViewMode] = useState("walls")
@@ -152,7 +154,7 @@ const Dashboard = () => {
 
                 const allCells = {};
                 const midspanConfig = data.all.vars.midspans;
-                const midspanConnections = data.hosts;
+                const midspanConnectionsConfig = data.all.hosts;
                 const fetchedWallNames = data.all.children.rpis.children;
 
                 // Process walls and segments using the same base cell data
@@ -194,18 +196,44 @@ const Dashboard = () => {
 
                 setRpiCells(allCells);
                 setMidspans(midspanConfig);
-                setMidspanConnections(midspanConnections)
+                console.log("Config:", midspanConnectionsConfig)
+                setMidspanConnections(midspanConnectionsConfig)
                 setWallNames(fetchedWallNames);
             })
             .catch((error) => console.error("Failed to load hosts.yaml:", error));
     }, []);
 
+    useEffect(() => {
+        const midspanPortsConfig = {};
+        if (midspanConnections){
+            console.log("Connections: ", midspanConnections)
+            Object.entries(midspanConnections).forEach(([rpiId, rpiData]) => {
+                const poeInfo = rpiData["poe-port"];
+                const midspanInfo = rpiData["midspan"]
+
+                if (!midspanPortsConfig[midspanInfo]){
+                    midspanPortsConfig[midspanInfo] = {};
+                }
+
+                midspanPortsConfig[midspanInfo][poeInfo] = {
+                    power: "N/A",
+                    status: "unknown",
+                    voltage: "N/A",
+                    rpi: rpiId,
+                };
+            });
+
+            setMidspanPorts(midspanPortsConfig)
+        }
+        console.log("connections:", midspanPortsConfig)
+    }, [midspanConnections]);
 
 
     useEffect(() => {
         if (visibleItems.length === 0) {
             const newItems = viewMode === "walls" ? Object.keys(walls) : Object.keys(segments);
             setVisibleItems(newItems);
+            console.log("visible items", newItems)
         }
     }, [viewMode, walls, segments]);
 
@@ -432,8 +460,43 @@ const Dashboard = () => {
                                 updateTile={updateTile}
                                 faultyCount={Object.values(segmentData.tiles).filter(t => t.status.value === "faulty").length}
                             />
-                        ))
-                }
+                        ))}
+
+                    {Object.entries(midspans).map(([midspanId, midspanData]) => {
+                        const allVisibleTileIds = new Set();
+
+                        // Gather visible tile IDs
+                        const source = viewMode === "walls" ? walls : segments;
+                        visibleItems.forEach(name => {
+                            const tileGroup = source[name];
+                            if (tileGroup) {
+                                Object.keys(tileGroup.tiles).forEach(tileId => {
+                                    allVisibleTileIds.add(tileId);
+                                });
+                            }
+                        });
+
+                        // Filter ports based on visible tile IDs
+                        const filteredPorts = {};
+                        const ports = midspanPorts[midspanId] || {};
+                        Object.entries(ports).forEach(([portId, portInfo]) => {
+                            if (allVisibleTileIds.has(portInfo.rpi)) {
+                                filteredPorts[portId] = portInfo;
+                            }
+                        });
+
+                        // Only render midspan if it has relevant ports
+                        if (Object.keys(filteredPorts).length === 0) return null;
+
+                        return (
+                            <MidspanDevice
+                                key={midspanId}
+                                midspanId={midspanId}
+                                midspanData={midspanData}
+                                ports={filteredPorts}
+                            />
+                        );
+                    })}
 
                 </Content>
             </Layout>
