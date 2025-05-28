@@ -1,6 +1,5 @@
 import {useState, useReducer, useEffect, useRef, createContext, useContext} from "react";
 import { Layout, Button, message } from "antd";
-import { MenuOutlined } from "@ant-design/icons";
 import { generateMockData } from "./Components/mqttWebSocketListener";
 import InfoBar from "./Components/ServerBar";
 import Wall from "./Components/Wall";
@@ -168,30 +167,23 @@ const pduReducer = (state, action) => {
     }
 };
 
-// Server reducer for state management
+// Server reducer for singleton server state
 const serverReducer = (state, action) => {
     switch (action.type) {
         case 'UPDATE_SERVER':
-            const { serverId, updates } = action.payload;
             return {
                 ...state,
-                [serverId]: {
-                    ...state[serverId],
-                    ...updates,
-                    last_received: Date.now()
-                }
+                ...action.payload.updates,
+                last_received: Date.now()
             };
 
         case 'BULK_UPDATE_SERVERS':
-            const updatedState = { ...state };
-            action.payload.forEach(({ serverId, updates }) => {
-                updatedState[serverId] = {
-                    ...updatedState[serverId],
-                    ...updates,
-                    last_received: Date.now()
-                };
-            });
-            return updatedState;
+            // If you still want to support bulk updates, this assumes each update is a partial server object.
+            return action.payload.reduce((acc, update) => ({
+                ...acc,
+                ...update,
+                last_received: Date.now()
+            }), state);
 
         default:
             return state;
@@ -357,7 +349,6 @@ const Dashboard = () => {
 
                 setRpiCells(allCells);
                 setMidspans(midspanConfig);
-                console.log("Config:", midspanConnectionsConfig)
                 setMidspanConnections(midspanConnectionsConfig)
                 setWallNames(fetchedWallNames);
             })
@@ -447,10 +438,10 @@ const Dashboard = () => {
     };
 
     // Server update functions
-    const updateServer = (serverId, updates) => {
+    const updateServer = (updates) => {
         dispatchServer({
             type: 'UPDATE_SERVER',
-            payload: { serverId, updates }
+            payload: { updates }
         });
     };
 
@@ -669,12 +660,6 @@ const Dashboard = () => {
                 return;
             }
 
-            const serverId = data.id || data.server_id || data.hostname;
-            if (!serverId) {
-                console.warn("Server message missing ID:", data);
-                return;
-            }
-
             const timestamp = Date.now();
             let processedData = {};
 
@@ -687,14 +672,14 @@ const Dashboard = () => {
                 }
             });
 
-            updateServer(serverId, {
+            updateServer( {
                 data: {
-                    ...serverDataRef.current[serverId]?.data || {},
+                    ...serverDataRef.current?.data,
                     ...processedData
                 }
             });
 
-            console.log(`Updated server ${serverId}:`, processedData);
+            console.log(`Updated server:`, processedData);
         } catch (error) {
             console.error("Error processing server data:", error);
         }
@@ -880,7 +865,7 @@ const Dashboard = () => {
                     setSelectedDisplayField={setSelectedDisplayField}
                 />
 
-                <InfoBar/>
+                <InfoBar data={serverData}/>
                 {graphVisible && selectedTileId && (
                     <div style={{
                         position: 'fixed',

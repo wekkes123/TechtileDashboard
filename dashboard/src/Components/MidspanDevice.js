@@ -16,18 +16,18 @@ const MidspanDevice = ({ midspanId, midspanData, midspanRuntimeData, ports }) =>
                     <p><strong>IP Address:</strong> {midspanData.ip}</p>
                     <p><strong>Type:</strong> {midspanData.type}</p>
                     <p><strong>Ports:</strong> {midspanData["nr-ports"]}</p>
+                    {midspanRuntimeData && (
+                        <div>
+                            {Object.entries(midspanRuntimeData.data || {}).map(([key, valueObj]) => (
+                                <p key={key}><strong>{key}:</strong> {valueObj.value}</p>
+                            ))}
+                            <p><strong>Last Received:</strong> {new Date(midspanRuntimeData.last_received).toLocaleString()}</p>
+                        </div>
+                    )}
                 </Panel>
             </Collapse>
 
-            {midspanRuntimeData && (
-                <div>
-                    <h3>Runtime Data</h3>
-                    {Object.entries(midspanRuntimeData.data || {}).map(([key, valueObj]) => (
-                        <p key={key}><strong>{key}:</strong> {valueObj.value}</p>
-                    ))}
-                    <p><strong>Last Received:</strong> {new Date(midspanRuntimeData.last_received).toLocaleString()}</p>
-                </div>
-            )}
+
 
             <div>
                 <h3>POE Ports</h3>

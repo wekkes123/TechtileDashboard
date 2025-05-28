@@ -8,17 +8,7 @@ async function fetchSettings() {
     return yaml.load(text);
 }
 
-export default function InfoBar() {
-    const initialState = {
-        status: "Unknown",
-        ip: "0.0.0.0",
-        cpuLoad: 0,
-        ram: 0,
-        internalDisk: 0,
-        raidDisk: 0,
-        cpuTemp: 30,
-    };
-
+export default function InfoBar({serverData}) {
     const [thresholds, setThresholds] = useState(null);
 
     useEffect(() => {
@@ -28,18 +18,11 @@ export default function InfoBar() {
         }).catch((error) => console.error("Failed to load settings.yaml:", error));
     }, []);
 
-    function infoReducer(state, action) {
-        switch (action.type) {
-            case "UPDATE_ALL":
-                return { ...state, ...action.payload };
-            case "UPDATE_FIELD":
-                return { ...state, [action.field]: action.value };
-            default:
-                return state;
-        }
+    console.log("data: ", serverData)
+    if (!serverData) {
+        return <div>Loading Server Bar...</div>;
     }
-
-    const [state, dispatch] = useReducer(infoReducer, initialState);
+    const serverBarData = serverData.data
 
     // Function to determine text color based on thresholds
     const getColor = (value, threshold) => {
@@ -47,21 +30,6 @@ export default function InfoBar() {
         if (value >= threshold.critical) return "#fa9d9d"; // Red
         if (value >= threshold.warning) return "#facd7a"; // Orange
         return "#c5fab1"; // Green
-    };
-
-    const updateAllInfo = () => {
-        dispatch({
-            type: "UPDATE_ALL",
-            payload: {
-                status: "Online",
-                ip: "192.168.1.100",
-                cpuLoad: Math.floor(Math.random() * 100),
-                ram: Math.floor(Math.random() * 100),
-                internalDisk: Math.floor(Math.random() * 100),
-                raidDisk: Math.floor(Math.random() * 100),
-                cpuTemp: Math.floor(Math.random() * 100),
-            },
-        });
     };
 
     // Styles inside the component
@@ -96,31 +64,23 @@ export default function InfoBar() {
     return (
         <div style={styles.infoBar}>
             <div style={styles.infoItem}><strong>Server</strong></div>
-            <div style={styles.infoItem}>Status: {state.status}</div>
-            <div style={styles.infoItem}>IP Address: {state.ip}</div>
-            <div style={{ ...styles.infoItem, color: getColor(state.cpuLoad, thresholds?.cpuLoad) }}>
-                CPU Load: {state.cpuLoad}%
+            <div style={styles.infoItem}>Status: {serverBarData.status}</div>
+            <div style={styles.infoItem}>IP Address: {serverBarData.ip}</div>
+            <div style={{ ...styles.infoItem, color: getColor(serverBarData.cpuLoad, thresholds?.cpuLoad) }}>
+                CPU Load: {serverBarData.cpuLoad}%
             </div>
-            <div style={{ ...styles.infoItem, color: getColor(state.ram, thresholds?.ram) }}>
-                RAM: {state.ram}%
+            <div style={{ ...styles.infoItem, color: getColor(serverBarData.ram, thresholds?.ram) }}>
+                RAM: {serverBarData.ram}%
             </div>
-            <div style={{ ...styles.infoItem, color: getColor(state.internalDisk, thresholds?.internalDisk) }}>
-                Internal Disk: {state.internalDisk}%
+            <div style={{ ...styles.infoItem, color: getColor(serverBarData.internalDisk, thresholds?.internalDisk) }}>
+                Internal Disk: {serverBarData.internalDisk}%
             </div>
-            <div style={{ ...styles.infoItem, color: getColor(state.raidDisk, thresholds?.raidDisk) }}>
-                Raid Disk: {state.raidDisk}%
+            <div style={{ ...styles.infoItem, color: getColor(serverBarData.raidDisk, thresholds?.raidDisk) }}>
+                Raid Disk: {serverBarData.raidDisk}%
             </div>
-            <div style={{ ...styles.infoItem, color: getColor(state.cpuTemp, thresholds?.cpuTemp) }}>
-                CPU Temp: {state.cpuTemp}°C
+            <div style={{ ...styles.infoItem, color: getColor(serverBarData.cpuTemp, thresholds?.cpuTemp) }}>
+                CPU Temp: {serverBarData.cpuTemp}°C
             </div>
-            <button
-                style={styles.button}
-                onMouseOver={(e) => (e.target.style.background = styles.buttonHover.background)}
-                onMouseOut={(e) => (e.target.style.background = styles.button.background)}
-                onClick={updateAllInfo}
-            >
-                Update All
-            </button>
         </div>
     );
 }
