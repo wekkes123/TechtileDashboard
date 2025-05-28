@@ -1,4 +1,4 @@
-import {useState, useReducer, useEffect, useRef} from "react";
+import {useState, useReducer, useEffect, useRef, createContext, useContext} from "react";
 import { Layout, Button, message } from "antd";
 import { MenuOutlined } from "@ant-design/icons";
 import { generateMockData } from "./Components/mqttWebSocketListener";
@@ -76,22 +76,28 @@ function generateTiles(wallOrSegmentName, cellData) {
     return Tiles;
 }
 
+
 const Dashboard = () => {
     const [rpiCells, setRpiCells] = useState({});
     const [midspans, setMidspans] = useState({});
+    const [midspanConnections, setMidspanConnections] = useState({});
     const [wallNames, setWallNames] = useState({});
     const [open, setOpen] = useState(false);
     const [viewMode, setViewMode] = useState("walls")
     const [visibleItems, setVisibleItems] = useState([]);
     const [rpi_ip,setrpi_ip] = useState("127.0.0.1");
     const [activity,setActivity] = useState(false);
-    const [graphVisible, setGraphVisible] = useState(false);
     const [openHeader, setOpenHeader] = useState(false);
     const [showExtra, setShowExtra] = useState(false); // NEW STATE
 
+    const [selectedTileId, setSelectedTileId] = useState(null);
+    const [graphVisible, setGraphVisible] = useState(false);
 
-
-    // Initialize tiles state with useReducer
+    const showGraphForTile = (tileId) => {
+        setSelectedTileId(tileId);
+        setGraphVisible(true);
+    };
+        // Initialize tiles state with useReducer
     const [tiles, dispatchTiles] = useReducer(tilesReducer, {});
 
     const tilesRef = useRef(tiles);
@@ -151,6 +157,7 @@ const Dashboard = () => {
 
                 const allCells = {};
                 const midspanConfig = data.all.vars.midspans;
+                const midspanConnections = data.hosts;
                 const fetchedWallNames = data.all.children.rpis.children;
 
                 // Process walls and segments using the same base cell data
@@ -192,6 +199,7 @@ const Dashboard = () => {
 
                 setRpiCells(allCells);
                 setMidspans(midspanConfig);
+                setMidspanConnections(midspanConnections)
                 setWallNames(fetchedWallNames);
             })
             .catch((error) => console.error("Failed to load hosts.yaml:", error));
@@ -353,6 +361,8 @@ const Dashboard = () => {
 
 
     return (
+        <GraphContext.Provider value={{ showGraphForTile }}>
+
         <Layout style={{minHeight: "100vh", display: "flex"}}>
             <Layout style={{width: open ? "50vw" : "100vw", transition: "width 0.3s ease"}}>
                 <DashboardHeader
@@ -419,13 +429,6 @@ const Dashboard = () => {
                             ))}
                 </Content>
             </Layout>
-            <Button
-                type="primary"
-                onClick={() => setGraphVisible(true)}
-                style={{ backgroundColor: "#722ed1", marginTop: "35px" }}
-            >
-                Show Graph
-            </Button>
 
 
             <ControlPanel
@@ -442,7 +445,7 @@ const Dashboard = () => {
             />
 
             <InfoBar/>
-            {graphVisible && (
+            {graphVisible && selectedTileId && (
                 <div style={{
                     position: 'fixed',
                     top: 0,
@@ -462,12 +465,19 @@ const Dashboard = () => {
                     >
                         Close
                     </Button>
-                    <GraphPage deviceId="TECHDASH"/>
+                    <GraphPage deviceId={selectedTileId}/>
                 </div>
             )}
 
         </Layout>
+        </GraphContext.Provider>
     );
 };
+
+export const GraphContext = createContext({
+    showGraphForTile: () => {},
+});
+
+export const useGraph = () => useContext(GraphContext);
 
 export default Dashboard;
