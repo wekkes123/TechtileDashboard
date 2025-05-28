@@ -264,6 +264,7 @@ const Dashboard = () => {
     }, [pduData]);
 
     useEffect(() => {
+        console.log("de serverdata:", serverData)
         serverDataRef.current = serverData;
     }, [serverData]);
 
@@ -413,6 +414,10 @@ const Dashboard = () => {
         message.info(`Reset tile ${tileId}`);
     };
 
+    const togglePort = () => {
+        //todo add toggleport logic
+    }
+
     // Midspan update functions
     const updateMidspan = (midspanId, updates) => {
         dispatchMidspan({
@@ -543,6 +548,7 @@ const Dashboard = () => {
     };
 
     const handleMidspanMessage = async (data) => {
+        console.log("midspandata:", data)
         try {
             if (!data || typeof data !== "object") {
                 console.warn("Received invalid midspan data:", data);
@@ -654,12 +660,12 @@ const Dashboard = () => {
     };
 
     const handleServerMessage = async (data) => {
+        console.log("server message:", data)
         try {
             if (!data || typeof data !== "object") {
-                console.warn("Received invalid server data:", data);
+                console.warn("Received invalid data:", data);
                 return;
             }
-
             const timestamp = Date.now();
             let processedData = {};
 
@@ -671,14 +677,12 @@ const Dashboard = () => {
                     };
                 }
             });
-
             updateServer( {
                 data: {
                     ...serverDataRef.current?.data,
                     ...processedData
                 }
             });
-
             console.log(`Updated server:`, processedData);
         } catch (error) {
             console.error("Error processing server data:", error);
@@ -844,6 +848,7 @@ const Dashboard = () => {
                                     midspanData={midspanConfigData}
                                     midspanRuntimeData={midspanData[midspanId]}
                                     ports={filteredPorts}
+                                    /*togglePort={togglePort}*/
                                 />
                             );
                         })}
@@ -865,8 +870,10 @@ const Dashboard = () => {
                     setSelectedDisplayField={setSelectedDisplayField}
                 />
 
-                <InfoBar data={serverData}/>
-                {graphVisible && selectedTileId && (
+
+            {serverData?.ip && <InfoBar serverData={serverData} />}
+
+            {graphVisible && selectedTileId && (
                     <div style={{
                         position: 'fixed',
                         top: 0,

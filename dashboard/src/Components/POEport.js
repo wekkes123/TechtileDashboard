@@ -1,10 +1,7 @@
-//Should be displayed: Status(Enable/Disable), Power, Max power, Class(0<-->8), be able to enable disable
-
-// POEport.js
 import React, { useState, useEffect } from "react";
 import { Card, Modal, Button, Tag, Tooltip } from "antd";
 
-const POEPort = ({ midspanId, portId, portData }) => {
+const POEPort = ({ midspanId, portId, portData, togglePort }) => {
     const [modalOpen, setModalOpen] = useState(false);
     const [now, setNow] = useState(Date.now());
 
@@ -14,9 +11,9 @@ const POEPort = ({ midspanId, portId, portData }) => {
     useEffect(() => {
         const interval = setInterval(() => {
             setNow(Date.now());
-        }, 10000); // update every 10 seconds
+        }, 10000);
 
-        return () => clearInterval(interval); // cleanup
+        return () => clearInterval(interval);
     }, []);
 
     const timeSince = (timestamp) => {
@@ -30,15 +27,15 @@ const POEPort = ({ midspanId, portId, portData }) => {
         return `${days} day${days !== 1 ? 's' : ''} ago`;
     };
 
-    const getStatusColor = (status) => {
-        switch (status) {
+    const getBackgroundColor = () => {
+        switch (portData.status) {
             case "online":
-                return "green";
+                return "#dfffd6"; // Green
             case "offline":
-                return "red";
+                return "#ffd6d6"; // Red
             case "unknown":
             default:
-                return "default";
+                return "#FFFFFF"; // Grey
         }
     };
 
@@ -53,14 +50,13 @@ const POEPort = ({ midspanId, portId, portData }) => {
                     flexDirection: "column",
                     justifyContent: "center",
                     alignItems: "center",
-                    textAlign: "center"
+                    textAlign: "center",
+                    backgroundColor: getBackgroundColor(),
+                    cursor: "pointer"
                 }}
             >
                 <strong>Port:</strong> {portId}<br />
                 <strong>Tile:</strong> {portData.rpi}<br />
-                <strong>Status:</strong> <Tag color={getStatusColor(portData.status)}>{portData.status}</Tag><br />
-                <strong>Power:</strong> {portData.power}<br />
-                <strong>Voltage:</strong> {portData.voltage}<br />
             </Card>
 
             <Modal
@@ -75,15 +71,17 @@ const POEPort = ({ midspanId, portId, portData }) => {
                     <p><strong>Connected RPI:</strong> {portData.rpi}</p>
                     <p>
                         <strong>Status:</strong>
-                        <Tag color={getStatusColor(portData.status)}>
+                        <Tag color={
+                            portData.status === "online" ? "green" :
+                                portData.status === "offline" ? "red" :
+                                    "default"
+                        }>
                             {portData.status}
                         </Tag>
                     </p>
                     <p><strong>Power:</strong> {portData.power}</p>
                     <p><strong>Voltage:</strong> {portData.voltage}</p>
-                    {/* Display other data dynamically */}
                     {Object.entries(portData).map(([key, value]) => {
-                        // Exclude keys already displayed or internal
                         if (['rpi', 'power', 'status', 'voltage', 'last_received', 'midspan_id', 'port_id', 'midspan', 'port'].includes(key)) {
                             return null;
                         }
@@ -97,6 +95,14 @@ const POEPort = ({ midspanId, portId, portData }) => {
                             </Tooltip>
                         );
                     })}
+
+                    <Button
+                        onClick={() => togglePort()}
+                        style={{ backgroundColor: "lightblue", color: "rgba(1,1,1,1)" }}
+                    >
+                        Toggle Port
+                    </Button>
+
                 </div>
             </Modal>
         </>

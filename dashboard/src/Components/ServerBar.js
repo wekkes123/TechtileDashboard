@@ -1,4 +1,4 @@
-import React, { useReducer, useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import yaml from "js-yaml";
 
 // Fetch YAML settings
@@ -8,31 +8,27 @@ async function fetchSettings() {
     return yaml.load(text);
 }
 
-export default function InfoBar({serverData}) {
+function InfoBar({ serverData }) {
     const [thresholds, setThresholds] = useState(null);
 
     useEffect(() => {
-        fetchSettings().then((data) => {
-            console.log("Loaded YAML settings:", data); // Debugging
-            setThresholds(data.thresholds); // Update state when YAML is loaded
-        }).catch((error) => console.error("Failed to load settings.yaml:", error));
+        fetchSettings()
+            .then((data) => {
+                console.log("Loaded YAML settings:", data);
+                setThresholds(data.thresholds);
+            })
+            .catch((error) => console.error("Failed to load settings.yaml:", error));
     }, []);
 
-    console.log("data: ", serverData)
-    if (!serverData) {
-        return <div>Loading Server Bar...</div>;
-    }
-    const serverBarData = serverData.data
+    const serverBarData = serverData?.data || {};
 
-    // Function to determine text color based on thresholds
     const getColor = (value, threshold) => {
-        if (!threshold) return "white"; // Default color if thresholds are not yet loaded
+        if (value === undefined || threshold === undefined) return "white";
         if (value >= threshold.critical) return "#fa9d9d"; // Red
         if (value >= threshold.warning) return "#facd7a"; // Orange
         return "#c5fab1"; // Green
     };
 
-    // Styles inside the component
     const styles = {
         infoBar: {
             position: "fixed",
@@ -44,43 +40,34 @@ export default function InfoBar({serverData}) {
             justifyContent: "space-around",
             padding: "10px",
             fontSize: "14px",
+            zIndex: 1000,
         },
         infoItem: {
             margin: "0 10px",
         },
-        button: {
-            background: "#444",
-            color: "white",
-            border: "none",
-            padding: "5px 10px",
-            marginLeft: "10px",
-            cursor: "pointer",
-        },
-        buttonHover: {
-            background: "#666",
-        },
+    };
+
+    const renderField = (label, value, thresholdKey) => {
+        if (value === undefined) return null;
+        return (
+            <div style={{ ...styles.infoItem, color: getColor(value, thresholds?.[thresholdKey]) }}>
+                {label}: {value}{label.includes("Temp") ? "°C" : "%"}
+            </div>
+        );
     };
 
     return (
         <div style={styles.infoBar}>
             <div style={styles.infoItem}><strong>Server</strong></div>
-            <div style={styles.infoItem}>Status: {serverBarData.status}</div>
-            <div style={styles.infoItem}>IP Address: {serverBarData.ip}</div>
-            <div style={{ ...styles.infoItem, color: getColor(serverBarData.cpuLoad, thresholds?.cpuLoad) }}>
-                CPU Load: {serverBarData.cpuLoad}%
-            </div>
-            <div style={{ ...styles.infoItem, color: getColor(serverBarData.ram, thresholds?.ram) }}>
-                RAM: {serverBarData.ram}%
-            </div>
-            <div style={{ ...styles.infoItem, color: getColor(serverBarData.internalDisk, thresholds?.internalDisk) }}>
-                Internal Disk: {serverBarData.internalDisk}%
-            </div>
-            <div style={{ ...styles.infoItem, color: getColor(serverBarData.raidDisk, thresholds?.raidDisk) }}>
-                Raid Disk: {serverBarData.raidDisk}%
-            </div>
-            <div style={{ ...styles.infoItem, color: getColor(serverBarData.cpuTemp, thresholds?.cpuTemp) }}>
-                CPU Temp: {serverBarData.cpuTemp}°C
-            </div>
+            {serverBarData.status && <div style={styles.infoItem}>Status: {serverBarData.status}</div>}
+            {serverBarData.ip && <div style={styles.infoItem}>IP Address: {serverBarData.ip}</div>}
+            {renderField("CPU Load", serverBarData.cpuLoad, "cpuLoad")}
+            {renderField("RAM", serverBarData.ram, "ram")}
+            {renderField("Internal Disk", serverBarData.internalDisk, "internalDisk")}
+            {renderField("Raid Disk", serverBarData.raidDisk, "raidDisk")}
+            {renderField("CPU Temp", serverBarData.cpuTemp, "cpuTemp")}
         </div>
     );
 }
+
+export default InfoBar;

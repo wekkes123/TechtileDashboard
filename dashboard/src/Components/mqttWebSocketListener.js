@@ -50,6 +50,8 @@ export function generateMockData(handlers = {}) {
     client.on("message", (topic, message) => {
         try {
             const data = JSON.parse(message.toString());
+            if(topic !== "rpi/data"){
+                console.log(data)}
             const handler = handlers[topic];
             if (handler) {
                 handler(data);
