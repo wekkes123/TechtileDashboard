@@ -224,8 +224,8 @@ const Dashboard = () => {
     const [selectedTileId, setSelectedTileId] = useState(null);
     const [graphVisible, setGraphVisible] = useState(false);
     const [statusJson, setStatusJson] = useState({
-        status: "active",
-        message: "Temperature test running"
+        status: "inactive",
+        message: ""
     });
     const [selectedDisplayField, setSelectedDisplayField] = useState("cpuTemp");
 
@@ -478,6 +478,7 @@ const Dashboard = () => {
     let isPinging = false;
 
     const pingAllRpis = async () => {
+        console.log(activity)
         if (isPinging) return;
         isPinging = true;
 
@@ -691,6 +692,7 @@ const Dashboard = () => {
 
     const handleStatusMessage = async (data) => {
         try {
+            setActivity(data?.status === "active");
             setStatusJson(data)
         } catch (error) {
             console.error("Error processing status data:", error);
@@ -752,7 +754,7 @@ const Dashboard = () => {
                             top: "70px",
                             left: 0,
                             right: 0,
-                            background: "#f0f2f5",
+                            background: "#001529",
                             borderBottom: "1px solid #d9d9d9",
                             zIndex: 999,
                             overflow: "hidden",
@@ -763,7 +765,7 @@ const Dashboard = () => {
                             padding: showExtra ? "16px" : "0px",
                         }}
                     >
-                        <p style={{margin: 0}}>Extra controls</p>
+                        <p style={{margin: 0, color: "#FFFFFF" }}>Extra controls</p>
                         <Button
                             onClick={() => pingAllRpis()}
                             style={{ backgroundColor: "lightblue", color: "rgba(1,1,1,1)" }}

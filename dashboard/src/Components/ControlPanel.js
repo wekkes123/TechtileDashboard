@@ -127,12 +127,6 @@ const ControlPanel = ({
                     </Checkbox>
                 ))}
             </div>
-
-            <div style={{marginTop: 30}}>
-                <h3>Midspans</h3>
-                Logic to control the midspans
-            </div>
-
             <div style={{marginTop: 30}}>
                 <h3>Tile Display Data</h3>
                 <select
