@@ -29,9 +29,9 @@ const POEPort = ({ midspanId, portId, portData, togglePort }) => {
     const getBackgroundColor = () => {
         const status = portData?.status?.value;
         switch (status) {
-            case "Enabled":
+            case "active":
                 return "#dfffd6";
-            case "Disabled":
+            case "inactive":
                 return "#ffd6d6";
             default:
                 return "#FFFFFF";
@@ -71,8 +71,8 @@ const POEPort = ({ midspanId, portId, portData, togglePort }) => {
                     <p>
                         <strong>Status:</strong>
                         <Tag color={
-                            portData?.status?.value === "Enabled" ? "green" :
-                                portData?.status?.value === "Disabled" ? "red" :
+                            portData?.status?.value === "active" ? "green" :
+                                portData?.status?.value === "inactive" ? "red" :
                                     "default"
                         }>
                             {portData?.status?.value ?? "Unknown"}

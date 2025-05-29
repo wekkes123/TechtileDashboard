@@ -4,7 +4,7 @@ import { Collapse } from "antd";
 
 const MidspanDevice = ({ midspanId, midspanData, midspanRuntimeData, ports, togglePort }) => {
     const { Panel } = Collapse;
-    const isOffline = midspanRuntimeData?.data?.status?.value !== "Operational";
+    const isOffline = midspanRuntimeData?.data?.status?.value !== "active";
 
     return (
         <div style={{marginBottom: "20px", border: "1px solid #ddd", padding: "10px", borderRadius: "8px"}}>
