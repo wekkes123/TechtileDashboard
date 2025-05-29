@@ -19,7 +19,7 @@ const Wall = ({ wallName, wallData, updateTile, faultyCount, showOnlyFaulty,sele
         });
     };
 
-    const useSimpleLayout = showOnlyFaulty && faultyCount < 5;
+    const useSimpleLayout = showOnlyFaulty && faultyCount < 10;
 
     return (
         <div style={{ border: "1px solid #ddd", padding: "10px", borderRadius: "8px", marginBottom: "20px" }}>

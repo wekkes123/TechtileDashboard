@@ -754,7 +754,7 @@ const Dashboard = () => {
                             top: "70px",
                             left: 0,
                             right: 0,
-                            background: "#001529",
+                            background: "#F001529",
                             borderBottom: "1px solid #d9d9d9",
                             zIndex: 999,
                             overflow: "hidden",
