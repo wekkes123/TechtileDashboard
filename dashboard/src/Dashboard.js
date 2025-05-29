@@ -580,7 +580,7 @@ const Dashboard = () => {
                 }
             });
 
-            console.log(`Updated midspan ${midspanId}:`, processedData);
+            //console.log(`Updated midspan ${midspanId}:`, processedData);
         } catch (error) {
             console.error("Error processing midspan data:", error);
         }
@@ -593,8 +593,8 @@ const Dashboard = () => {
                 return;
             }
 
-            const midspanId = data.midspan_id || data.midspan;
-            const portId = data.port_id || data.port;
+            const midspanId = data.id;
+            const portId = data.port;
 
             if (!midspanId || !portId) {
                 console.warn("POE port message missing required IDs:", data);
@@ -615,7 +615,7 @@ const Dashboard = () => {
 
             updatePoePort(midspanId, portId, processedData);
 
-            console.log(`Updated POE port ${midspanId}:${portId}:`, processedData);
+            //console.log(`Updated POE port ${midspanId}:${portId}:`, processedData);
         } catch (error) {
             console.error("Error processing POE port data:", error);
         }
@@ -871,7 +871,7 @@ const Dashboard = () => {
                 />
 
 
-            {serverData?.ip && <InfoBar serverData={serverData} />}
+            {serverData?.data && <InfoBar serverData={serverData} />}
 
             {graphVisible && selectedTileId && (
                     <div style={{

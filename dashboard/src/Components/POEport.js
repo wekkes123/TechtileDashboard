@@ -12,7 +12,6 @@ const POEPort = ({ midspanId, portId, portData, togglePort }) => {
         const interval = setInterval(() => {
             setNow(Date.now());
         }, 10000);
-
         return () => clearInterval(interval);
     }, []);
 
@@ -28,14 +27,14 @@ const POEPort = ({ midspanId, portId, portData, togglePort }) => {
     };
 
     const getBackgroundColor = () => {
-        switch (portData.status) {
-            case "online":
-                return "#dfffd6"; // Green
-            case "offline":
-                return "#ffd6d6"; // Red
-            case "unknown":
+        const status = portData?.status?.value;
+        switch (status) {
+            case "Enabled":
+                return "#dfffd6";
+            case "Disabled":
+                return "#ffd6d6";
             default:
-                return "#FFFFFF"; // Grey
+                return "#FFFFFF";
         }
     };
 
@@ -56,11 +55,11 @@ const POEPort = ({ midspanId, portId, portData, togglePort }) => {
                 }}
             >
                 <strong>Port:</strong> {portId}<br />
-                <strong>Tile:</strong> {portData.rpi}<br />
+                <strong>Tile:</strong> {portData?.rpi ?? "N/A"}<br />
             </Card>
 
             <Modal
-                title={`POE Port: ${midspanId} - ${portId} (last updated ${portData.last_received ? timeSince(portData.last_received) : 'N/A'})`}
+                title={`POE Port: ${midspanId} - ${portId} (last updated ${portData?.last_received ? timeSince(portData.last_received) : 'N/A'})`}
                 open={modalOpen}
                 onCancel={closeModal}
                 footer={null}
@@ -68,21 +67,24 @@ const POEPort = ({ midspanId, portId, portData, togglePort }) => {
                 <div>
                     <p><strong>Midspan ID:</strong> {midspanId}</p>
                     <p><strong>Port ID:</strong> {portId}</p>
-                    <p><strong>Connected RPI:</strong> {portData.rpi}</p>
+                    <p><strong>Connected RPI:</strong> {portData?.rpi ?? "N/A"}</p>
                     <p>
                         <strong>Status:</strong>
                         <Tag color={
-                            portData.status === "online" ? "green" :
-                                portData.status === "offline" ? "red" :
+                            portData?.status?.value === "Enabled" ? "green" :
+                                portData?.status?.value === "Disabled" ? "red" :
                                     "default"
                         }>
-                            {portData.status}
+                            {portData?.status?.value ?? "Unknown"}
                         </Tag>
                     </p>
-                    <p><strong>Power:</strong> {portData.power}</p>
-                    <p><strong>Voltage:</strong> {portData.voltage}</p>
-                    {Object.entries(portData).map(([key, value]) => {
-                        if (['rpi', 'power', 'status', 'voltage', 'last_received', 'midspan_id', 'port_id', 'midspan', 'port'].includes(key)) {
+                    <p><strong>Power:</strong> {portData?.power?.value ?? "N/A"}</p>
+                    <p><strong>Voltage:</strong> {portData?.voltage ?? "N/A"}</p>
+                    <p><strong>Max Power:</strong> {portData?.maxPower?.value ?? "N/A"}</p>
+                    <p><strong>Class:</strong> {portData?.class?.value ?? "N/A"}</p>
+
+                    {Object.entries(portData || {}).map(([key, value]) => {
+                        if (['rpi', 'power', 'status', 'voltage', 'last_received', 'midspan_id', 'port_id', 'midspan', 'port', 'maxPower', 'class', 'id'].includes(key)) {
                             return null;
                         }
                         return (
@@ -91,18 +93,17 @@ const POEPort = ({ midspanId, portId, portData, togglePort }) => {
                                 title={`Last updated: ${portData.last_received ? timeSince(portData.last_received) : 'N/A'}`}
                                 placement="topLeft"
                             >
-                                <p><strong>{key}:</strong> {value}</p>
+                                <p><strong>{key}:</strong> {typeof value === "object" && value?.value !== undefined ? value.value : String(value)}</p>
                             </Tooltip>
                         );
                     })}
 
                     <Button
-                        onClick={() => togglePort()}
+                        onClick={() => togglePort?.()}
                         style={{ backgroundColor: "lightblue", color: "rgba(1,1,1,1)" }}
                     >
                         Toggle Port
                     </Button>
-
                 </div>
             </Modal>
         </>
