@@ -184,6 +184,10 @@ def send_control_command(device_id, command):
 
 
 def get_lan_ip():
+    """
+    Returns the LAN IP address of the current machine by opening a UDP connection
+    with a non-routable address and retrieving the socket's local IP.
+    """
     try:
         s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         s.connect(("8.8.8.8", 80))
@@ -196,6 +200,13 @@ def get_lan_ip():
 
 
 def update_api_ip_in_yaml(ip, path="hosts.yaml"):
+    """
+    Updates the given YAML file with the specified IP under the path 'all.vars.api_ip'.
+
+    Args:
+        ip (str): The IP address to write.
+        path (str): Path to the YAML file (default is 'hosts.yaml').
+    """
     try:
         with open(path, "r") as f:
             data = yaml.safe_load(f)
