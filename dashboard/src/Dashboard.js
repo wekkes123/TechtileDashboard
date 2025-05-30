@@ -478,7 +478,6 @@ const Dashboard = () => {
     let isPinging = false;
 
     const pingAllRpis = async () => {
-        console.log(activity)
         if (isPinging) return;
         isPinging = true;
 

@@ -50,7 +50,7 @@ export function generateMockData(handlers = {}) {
     client.on("message", (topic, message) => {
         try {
             const data = JSON.parse(message.toString());
-            if(topic === "midspan/poepoort") {
+            if(topic === "midspan/data") {
                 console.log(data)
             }
             const handler = handlers[topic];
