@@ -1,7 +1,7 @@
-import React, {useEffect} from "react";
-import {Card, Button, Modal, Tag, Tooltip} from "antd";
-import { useState } from "react";
-import {useGraph} from "../Dashboard";
+import React, { useEffect, useState } from "react";
+import { Card, Button, Modal, Tag, Tooltip, message } from "antd";
+import axios from "axios";
+import { useGraph } from "../Dashboard";
 
 const RpiCell = ({ tile, wallName, updateTile, selectedDisplayField }) => {
     const [modalOpen, setModalOpen] = useState(false);
@@ -12,59 +12,53 @@ const RpiCell = ({ tile, wallName, updateTile, selectedDisplayField }) => {
     const closeModal = () => setModalOpen(false);
 
     useEffect(() => {
-        const interval = setInterval(() => {
-            setNow(Date.now());
-        }, 10000);
-
-        return () => clearInterval(interval); // cleanup
+        const interval = setInterval(() => setNow(Date.now()), 10000);
+        return () => clearInterval(interval);
     }, []);
 
-
-    // Get background color based on status
     const getBackgroundColor = () => {
         switch (tile.status.value) {
-            case "working":
-                return "#dfffd6"; // Green for working
-            case "faulty":
-                return "#ffd6d6"; // Red for faulty
-            case "deactivated":
-                return "#f0f0f0"; // Grey for deactivated
-            default:
-                return "#f0f0f0"; // Default gray
+            case "working": return "#dfffd6";
+            case "faulty": return "#ffd6d6";
+            case "deactivated": return "#f0f0f0";
+            default: return "#f0f0f0";
         }
     };
 
-    // Get status text for display
     const getStatusText = () => {
         switch (tile.status.value) {
-            case "working":
-                return "Working";
-            case "faulty":
-                return "Faulty";
-            case "deactivated":
-                return "Deactivated";
-            default:
-                return "Unknown";
+            case "working": return "Working";
+            case "faulty": return "Faulty";
+            case "deactivated": return "Deactivated";
+            default: return "Unknown";
         }
     };
 
-    // Handle status change
+    const timeSince = (timestamp) => {
+        const seconds = Math.floor((now - timestamp) / 1000);
+        if (seconds < 60) return `${seconds} second${seconds !== 1 ? "s" : ""} ago`;
+        const minutes = Math.floor(seconds / 60);
+        if (minutes < 60) return `${minutes} minute${minutes !== 1 ? "s" : ""} ago`;
+        const hours = Math.floor(minutes / 60);
+        if (hours < 24) return `${hours} hour${hours !== 1 ? "s" : ""} ago`;
+        const days = Math.floor(hours / 24);
+        return `${days} day${days !== 1 ? "s" : ""} ago`;
+    };
+
     const handleStatusChange = (newStatus) => {
         updateTile(tile.id, { status: newStatus });
         closeModal();
     };
 
-    const timeSince = (timestamp) => {
-        const seconds = Math.floor((now - timestamp) / 1000);
-        if (seconds < 60) return `${seconds} second${seconds !== 1 ? 's' : ''} ago`;
-        const minutes = Math.floor(seconds / 60);
-        if (minutes < 60) return `${minutes} minute${minutes !== 1 ? 's' : ''} ago`;
-        const hours = Math.floor(minutes / 60);
-        if (hours < 24) return `${hours} hour${hours !== 1 ? 's' : ''} ago`;
-        const days = Math.floor(hours / 24);
-        return `${days} day${days !== 1 ? 's' : ''} ago`;
+    const sendDeviceCommand = async (command) => {
+        try {
+            await axios.post(`http://10.128.48.5:5000/control/${tile.id}/${command}`);
+            message.success(`Command '${command}' sent successfully to ${tile.id}`);
+        } catch (error) {
+            console.error(`Failed to send '${command}' command`, error);
+            message.error(`Failed to send '${command}' command`);
+        }
     };
-
 
     return (
         <>
@@ -80,6 +74,7 @@ const RpiCell = ({ tile, wallName, updateTile, selectedDisplayField }) => {
             >
                 {tile.id} ({tile.data?.[selectedDisplayField]?.value ?? "N/A"}{selectedDisplayField === "cpuTemp" ? "°" : ""})
             </Card>
+
             <Modal
                 title={`Tile: ${tile.id} (last updated ${timeSince(tile.last_received)})`}
                 open={modalOpen}
@@ -91,14 +86,15 @@ const RpiCell = ({ tile, wallName, updateTile, selectedDisplayField }) => {
                     <p>Segments: {tile.segments?.join(", ")}</p>
                     <p>Tile ID: {tile.id}</p>
                     <p>
-                        Status: <Tag color={
-                        tile.status.value === "working" ? "green" :
-                            tile.status.value === "faulty" ? "red" :
-                                "default"
-                    }>
-                        {getStatusText()}
-                    </Tag>
+                        Status:
+                        <Tag color={
+                            tile.status.value === "working" ? "green" :
+                                tile.status.value === "faulty" ? "red" : "default"
+                        }>
+                            {getStatusText()}
+                        </Tag>
                     </p>
+
                     {Object.entries(tile.data).map(([key, value]) => (
                         <Tooltip
                             key={key}
@@ -113,8 +109,7 @@ const RpiCell = ({ tile, wallName, updateTile, selectedDisplayField }) => {
                         <p>Metadata: {JSON.stringify(tile.metadata)}</p>
                     )}
 
-
-                    <div style={{ display: "flex", gap: "10px", marginTop: "15px" }}>
+                    <div style={{ display: "flex", gap: "10px", marginTop: "15px", flexWrap: "wrap" }}>
                         <Button
                             type="primary"
                             style={{ backgroundColor: "#52c41a" }}
@@ -135,11 +130,23 @@ const RpiCell = ({ tile, wallName, updateTile, selectedDisplayField }) => {
                             disabled={tile.status.value === "deactivated"}
                             style={{ backgroundColor: "#d9d9d9", color: "rgba(0,0,0,0.65)" }}
                         >
-                            Deactivate
+                            Deactivate (UI Only)
+                        </Button>
+                        <Button
+                            onClick={() => sendDeviceCommand("shutdown")}
+                            style={{ backgroundColor: "#ffec3d" }}
+                        >
+                            Deactivate (API)
+                        </Button>
+                        <Button
+                            onClick={() => sendDeviceCommand("reboot")}
+                            style={{ backgroundColor: "#1890ff", color: "white" }}
+                        >
+                            Reboot
                         </Button>
                         <Button
                             onClick={() => showGraphForTile(tile.id)}
-                            style={{ backgroundColor: "#722ed1"}}
+                            style={{ backgroundColor: "#722ed1", color: "white" }}
                         >
                             Show Graph
                         </Button>
