@@ -97,7 +97,12 @@ const POEPort = ({ midspanId, portId, portData, togglePort }) => {
                             </Tooltip>
                         );
                     })}
-
+                    <Button
+                        onClick={() => togglePort?.()}
+                        style={{ backgroundColor: "lightblue", color: "rgba(1,1,1,1)" }}
+                    >
+                        Toggle Port
+                    </Button>
                 </div>
             </Modal>
         </>

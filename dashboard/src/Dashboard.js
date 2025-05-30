@@ -225,7 +225,6 @@ const serverReducer = (state, action) => {
             };
 
         case 'BULK_UPDATE_SERVERS':
-            // If you still want to support bulk updates, this assumes each update is a partial server object.
             return action.payload.reduce((acc, update) => ({
                 ...acc,
                 ...update,
@@ -862,7 +861,7 @@ const Dashboard = () => {
                             top: "70px",
                             left: 0,
                             right: 0,
-                            background: "#F001529",
+                            background: "#001529",
                             borderBottom: "1px solid #d9d9d9",
                             zIndex: 999,
                             overflow: "hidden",
@@ -968,7 +967,7 @@ const Dashboard = () => {
                             key={pduId}
                             PDUId={pduId}
                             PDUData={deviceData}
-                            ports={pduPortData[pduId] || {}} // optional
+                            ports={pduPortData[pduId] || {}}
                         />
                     ))}
 

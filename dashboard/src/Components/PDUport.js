@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Card, Modal, Button, Tag, Tooltip } from "antd";
 
-const PDUPort = ({ PDUId, portId, portData, togglePort }) => {
+const PDUPort = ({ PDUId, portId, portData }) => {
     const [modalOpen, setModalOpen] = useState(false);
     const [now, setNow] = useState(Date.now());
 
@@ -94,13 +94,6 @@ const PDUPort = ({ PDUId, portId, portData, togglePort }) => {
                             </Tooltip>
                         );
                     })}
-
-                    <Button
-                        onClick={() => togglePort?.()}
-                        style={{ backgroundColor: "lightblue", color: "rgba(1,1,1,1)" }}
-                    >
-                        Toggle Port
-                    </Button>
                 </div>
             </Modal>
         </>
