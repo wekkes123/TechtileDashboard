@@ -152,6 +152,29 @@ const pduReducer = (state, action) => {
                 }
             };
 
+        case 'UPDATE_PDU_PORT':
+            const { pduId: pid, portId, updates: portUpdates } = action.payload;
+            return {
+                ...state,
+                [pid]: {
+                    ...state[pid],
+                    ports: {
+                        ...(state[pid]?.ports || {}),
+                        [portId]: {
+                            ...(state[pid]?.ports?.[portId] || {}),
+                            ...portUpdates
+                        }
+                    },
+                    last_received: Date.now()
+                }
+            };
+
+        case 'INITIALIZE_PDU_PORTS':
+            return {
+                ...state,
+                ...action.payload
+            };
+
         case 'BULK_UPDATE_PDUS':
             const updatedState = { ...state };
             action.payload.forEach(({ pduId, updates }) => {
@@ -168,9 +191,10 @@ const pduReducer = (state, action) => {
     }
 };
 
+
 const pduPortReducer = (state, action) => {
     switch (action.type) {
-        case 'UPDATE_POE_PORT':
+        case 'UPDATE_PDU_PORT': {
             const { pduId, portId, updates } = action.payload;
             return {
                 ...state,
@@ -178,33 +202,17 @@ const pduPortReducer = (state, action) => {
                     ...state[pduId],
                     [portId]: {
                         ...state[pduId]?.[portId],
-                        ...updates,
-                        last_received: Date.now()
+                        ...updates
                     }
                 }
             };
-
-        case 'BULK_UPDATE_POE_PORTS':
-            const updatedState = { ...state };
-            action.payload.forEach(({ pduId, portId, updates }) => {
-                if (!updatedState[pduId]) {
-                    updatedState[pduId] = {};
-                }
-                updatedState[pduId][portId] = {
-                    ...updatedState[pduId][portId],
-                    ...updates,
-                    last_received: Date.now()
-                };
-            });
-            return updatedState;
-
-        case 'INITIALIZE_POE_PORTS':
-            return action.payload;
+        }
 
         default:
             return state;
     }
 };
+
 
 // Server reducer for singleton server state
 const serverReducer = (state, action) => {
@@ -279,7 +287,7 @@ const Dashboard = () => {
     const [midspanData, dispatchMidspan] = useReducer(midspanReducer, {});
     const [poePortsData, dispatchPoePorts] = useReducer(poePortsReducer, {});
     const [pduData, dispatchPdu] = useReducer(pduReducer, {});
-    const [pduPortData, dispatchPduPort] = useReducer(pduPortReducer, {});
+    const [pduPortData, dispatchPduPorts] = useReducer(pduPortReducer, {});
     const [serverData, dispatchServer] = useReducer(serverReducer, {});
 
     const tilesRef = useRef(tiles);
@@ -477,6 +485,13 @@ const Dashboard = () => {
         });
     };
 
+    const updatePduPort = (pduId, portId, updates) => {
+        dispatchPduPorts({
+            type: 'UPDATE_PDU_PORT',
+            payload: { pduId, portId, updates }
+        });
+    };
+
     // POE Port update functions
     const updatePoePort = (midspanId, portId, updates) => {
         dispatchPoePorts({
@@ -531,7 +546,7 @@ const Dashboard = () => {
     const pingAllRpis = async () => {
         if (isPinging) return;
         isPinging = true;
-
+        console.log(pduPortData)
         const timestamp = Date.now();
         const tiles = tilesRef.current;
 
@@ -597,6 +612,40 @@ const Dashboard = () => {
             console.error("Error processing RPI data:", error);
         }
     };
+
+    const handlePDUPortMessage = async (data) => {
+        try {
+            if (!data || typeof data !== "object") {
+                console.warn("Received invalid PDU port data:", data);
+                return;
+            }
+
+            const pduId = data.id || data.pdu_id;
+            const portId = data.port;
+
+            if (!pduId || portId === undefined) {
+                console.warn("PDU port message missing required IDs:", data);
+                return;
+            }
+
+            const timestamp = Date.now();
+            let processedData = {};
+
+            Object.entries(data).forEach(([key, value]) => {
+                if (!['id', 'pdu_id', 'port'].includes(key)) {
+                    processedData[key] = {
+                        value,
+                        timestamp
+                    };
+                }
+            });
+
+            updatePduPort(pduId, portId, processedData);
+        } catch (error) {
+            console.error("Error processing PDU port data:", error);
+        }
+    };
+
 
     const handleMidspanMessage = async (data) => {
         try {
@@ -747,6 +796,14 @@ const Dashboard = () => {
         }
     };
 
+    const handlePDUPortsMessage = async (data) => {
+        try {
+            //
+        } catch (error) {
+            console.error("Error processing status data:", error);
+        }
+    };
+
     useEffect(() => {
         const timer = setTimeout(() => {
             pingAllRpis();
@@ -778,6 +835,9 @@ const Dashboard = () => {
             },
             "experiment": (data) => {
                 Promise.resolve().then(() => handleStatusMessage(data));
+            },
+            "pdu/port": (data) => {
+                Promise.resolve().then(() => handlePDUPortMessage(data));
             },
         });
 
@@ -903,12 +963,16 @@ const Dashboard = () => {
                             );
                         })}
 
-                    {Object.entries(pduDevices).map(([pduId, pduData])=>{
-                        console.log("Devices: ", pduId)
-                        return (
-                            <PDUDevice key={pduId} PDUId={pduId} PDUData={pduData} ports={pduData.ports}/>
-                        )
-                    })}
+                    {Object.entries(pduData).map(([pduId, deviceData]) => (
+                        <PDUDevice
+                            key={pduId}
+                            PDUId={pduId}
+                            PDUData={deviceData}
+                            ports={pduPortData[pduId] || {}} // optional
+                        />
+                    ))}
+
+
                     </Content>
                 </Layout>
 

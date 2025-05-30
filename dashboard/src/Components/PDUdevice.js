@@ -1,20 +1,18 @@
-//Should display: System current, System Voltage, System Power, Frequency
-
 import React from "react";
 import { Collapse } from "antd";
 import PDUPort from "./PDUport";
 
 const PDUDevice = ({ PDUId, PDUData, ports, togglePort }) => {
     const { Panel } = Collapse;
-    const isOffline = PDUData?.data?.status?.value !== "Operational";
+    const isOffline = PDUData?.data?.status?.value !== "active";
 
     return (
-        <div style={{marginBottom: "20px", border: "1px solid #ddd", padding: "10px", borderRadius: "8px"}}>
-            <h2 style={{textAlign: "center"}}>
+        <div style={{ marginBottom: "20px", border: "1px solid #ddd", padding: "10px", borderRadius: "8px" }}>
+            <h2 style={{ textAlign: "center" }}>
                 {PDUId} {isOffline ? <span style={{ color: "red" }}>❌</span> : <span style={{ color: "green" }}>✅</span>}
             </h2>
 
-            <Collapse defaultActiveKey={[]} style={{width: "auto"}}>
+            <Collapse defaultActiveKey={[]} style={{ width: "auto" }}>
                 <Panel header="Device Details" key="1">
                     {PDUData && (
                         <div>
@@ -29,9 +27,9 @@ const PDUDevice = ({ PDUId, PDUData, ports, togglePort }) => {
 
             <div>
                 <h3>PDU Ports</h3>
-                <div style={{display: "flex", flexWrap: "wrap"}}>
+                <div style={{ display: "flex", flexWrap: "wrap" }}>
                     {ports && Object.entries(ports).map(([portId, portData]) => (
-                        <PDUPort key={portId} portId={portId} portData={portData} togglePort={togglePort}/>
+                        <PDUPort key={portId} portId={portId} portData={portData} togglePort={togglePort} />
                     ))}
                 </div>
             </div>

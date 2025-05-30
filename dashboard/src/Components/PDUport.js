@@ -1,5 +1,3 @@
-//Should display: Status(Enable/Disable), Current, Voltage, Power, should be able to enable/disable port
-
 import React, { useState, useEffect } from "react";
 import { Card, Modal, Button, Tag, Tooltip } from "antd";
 
@@ -11,9 +9,7 @@ const PDUPort = ({ PDUId, portId, portData, togglePort }) => {
     const closeModal = () => setModalOpen(false);
 
     useEffect(() => {
-        const interval = setInterval(() => {
-            setNow(Date.now());
-        }, 10000);
+        const interval = setInterval(() => setNow(Date.now()), 10000);
         return () => clearInterval(interval);
     }, []);
 
@@ -29,14 +25,14 @@ const PDUPort = ({ PDUId, portId, portData, togglePort }) => {
     };
 
     const getBackgroundColor = () => {
-        const status = portData?.status?.value;
+        const status = portData?.status?.value?.toLowerCase();
         switch (status) {
-            case "Enabled":
-                return "#dfffd6";
-            case "Disabled":
-                return "#ffd6d6";
+            case "active":
+                return "#dfffd6"; // Green
+            case "inactive":
+                return "#ffd6d6"; // Red
             default:
-                return "#FFFFFF";
+                return "#FFFFFF"; // Default
         }
     };
 
@@ -56,11 +52,11 @@ const PDUPort = ({ PDUId, portId, portData, togglePort }) => {
                     cursor: "pointer"
                 }}
             >
-                <strong>Port:</strong> {portId}<br />
+                <strong>Port:</strong> {portId}
             </Card>
 
             <Modal
-                title={`PDU Port: ${PDUId} - ${portId} (last updated ${portData?.last_received ? timeSince(portData.last_received) : 'N/A'})`}
+                title={`PDU Port: ${PDUId} - ${portId} (last updated ${portData?.status?.timestamp ? timeSince(portData.status.timestamp) : 'N/A'})`}
                 open={modalOpen}
                 onCancel={closeModal}
                 footer={null}
@@ -68,31 +64,33 @@ const PDUPort = ({ PDUId, portId, portData, togglePort }) => {
                 <div>
                     <p><strong>PDU ID:</strong> {PDUId}</p>
                     <p><strong>Port ID:</strong> {portId}</p>
+
                     <p>
                         <strong>Status:</strong>
                         <Tag color={
-                            portData?.status?.value === "Enabled" ? "green" :
-                                portData?.status?.value === "Disabled" ? "red" :
+                            portData?.status?.value === "active" ? "green" :
+                                portData?.status?.value === "inactive" ? "red" :
                                     "default"
                         }>
                             {portData?.status?.value ?? "Unknown"}
                         </Tag>
                     </p>
+
                     <p><strong>Power:</strong> {portData?.power?.value ?? "N/A"}</p>
-                    <p><strong>Voltage:</strong> {portData?.voltage ?? "N/A"}</p>
+                    <p><strong>Voltage:</strong> {portData?.voltage?.value ?? "N/A"}</p>
                     <p><strong>Current:</strong> {portData?.current?.value ?? "N/A"}</p>
 
                     {Object.entries(portData || {}).map(([key, value]) => {
-                        if (['rpi', 'power', 'status', 'voltage', 'last_received', 'PDU_id', 'port_id', 'PDU', 'port', 'current', 'id'].includes(key)) {
+                        if (['power', 'status', 'voltage', 'current', 'last_received', 'PDU_id', 'port_id', 'PDU', 'port', 'id'].includes(key)) {
                             return null;
                         }
                         return (
                             <Tooltip
                                 key={key}
-                                title={`Last updated: ${portData.last_received ? timeSince(portData.last_received) : 'N/A'}`}
+                                title={`Last updated: ${value?.timestamp ? timeSince(value.timestamp) : 'N/A'}`}
                                 placement="topLeft"
                             >
-                                <p><strong>{key}:</strong> {typeof value === "object" && value?.value !== undefined ? value.value : String(value)}</p>
+                                <p><strong>{key}:</strong> {value?.value ?? String(value)}</p>
                             </Tooltip>
                         );
                     })}
