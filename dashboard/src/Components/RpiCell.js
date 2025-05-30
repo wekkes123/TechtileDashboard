@@ -126,17 +126,10 @@ const RpiCell = ({ tile, wallName, updateTile, selectedDisplayField }) => {
                             Set Faulty
                         </Button>
                         <Button
-                            onClick={() => handleStatusChange("deactivated")}
-                            disabled={tile.status.value === "deactivated"}
-                            style={{ backgroundColor: "#d9d9d9", color: "rgba(0,0,0,0.65)" }}
-                        >
-                            Deactivate (UI Only)
-                        </Button>
-                        <Button
                             onClick={() => sendDeviceCommand("shutdown")}
-                            style={{ backgroundColor: "#ffec3d" }}
+                            style={{ backgroundColor: "#d9d9d9" }}
                         >
-                            Deactivate (API)
+                            Deactivate
                         </Button>
                         <Button
                             onClick={() => sendDeviceCommand("reboot")}

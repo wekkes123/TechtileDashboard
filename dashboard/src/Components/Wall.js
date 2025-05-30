@@ -1,8 +1,9 @@
 import React from "react";
 import RpiCell from "./RpiCell";
-import { Button } from "antd";
+import { Button, message } from "antd";
+import axios from "axios";
 
-const Wall = ({ wallName, wallData, updateTile, faultyCount, showOnlyFaulty,selectedDisplayField }) => {
+const Wall = ({ wallName, wallData, updateTile, faultyCount, showOnlyFaulty, selectedDisplayField }) => {
     if (!wallData || !wallData.tiles) {
         return <div>Loading {wallName}...</div>;
     }
@@ -13,10 +14,21 @@ const Wall = ({ wallName, wallData, updateTile, faultyCount, showOnlyFaulty,sele
     const cols = [...new Set(tileKeys.map(key => key.charAt(0)))].sort();
     const rows = [...new Set(tileKeys.map(key => key.slice(1)))].sort();
 
-    const setAllTilesStatus = (status) => {
-        Object.keys(tiles).forEach(tileId => {
+    const setAllTilesStatus = async (status) => {
+        const deviceIds = Object.keys(tiles);
+
+        for (const tileId of deviceIds) {
             updateTile(tileId, { status });
-        });
+
+            try {
+                const command = status === "deactivated" ? "shutdown" : "reboot";
+                await axios.post(`http://10.128.48.5:5000/control/${tileId}/${command}`);
+                message.success(`Sent ${command} to ${tileId}`);
+            } catch (error) {
+                console.error(`Failed to send ${status} to ${tileId}`, error);
+                message.error(`Failed ${status} for ${tileId}`);
+            }
+        }
     };
 
     const useSimpleLayout = showOnlyFaulty && faultyCount < 10;
@@ -55,12 +67,12 @@ const Wall = ({ wallName, wallData, updateTile, faultyCount, showOnlyFaulty,sele
                 >
                     <div></div>
                     {cols.map(colLabel => (
-                        <div key={colLabel} style={{ maxWidth:"120px", textAlign: "center", fontWeight: "bold" }}>{colLabel}</div>
+                        <div key={colLabel} style={{ maxWidth: "120px", textAlign: "center", fontWeight: "bold" }}>{colLabel}</div>
                     ))}
 
                     {rows.map(rowLabel => (
                         <React.Fragment key={rowLabel}>
-                            <div style={{textAlign: "center", fontWeight: "bold" }}>{rowLabel}</div>
+                            <div style={{ textAlign: "center", fontWeight: "bold" }}>{rowLabel}</div>
                             {cols.map(colLabel => {
                                 const tileKey = `${colLabel}${rowLabel}`;
                                 return tiles[tileKey] ? (
