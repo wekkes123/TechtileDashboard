@@ -14,7 +14,7 @@ const RpiCell = ({ tile, wallName, updateTile, selectedDisplayField }) => {
     useEffect(() => {
         const interval = setInterval(() => {
             setNow(Date.now());
-        }, 10000); // update every 10 seconds
+        }, 10000);
 
         return () => clearInterval(interval); // cleanup
     }, []);

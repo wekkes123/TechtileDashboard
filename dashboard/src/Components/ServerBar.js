@@ -22,7 +22,6 @@ function InfoBar({ serverData }) {
 
     const rawData = serverData?.data || {};
 
-    // Helper: safely unwrap numeric percentage or temperature
     const parseNumeric = (val) => {
         if (typeof val === "string") {
             return parseFloat(val.replace("%", ""));

@@ -366,7 +366,6 @@ const Dashboard = () => {
                 const midspanConnectionsConfig = data.all.hosts;
                 const fetchedWallNames = data.all.children.rpis.children;
 
-                // Process walls and segments using the same base cell data
                 Object.entries(data.all.children).forEach(([key, cellData]) => {
                     if (!cellData.hosts) return;
 
@@ -795,14 +794,6 @@ const Dashboard = () => {
         }
     };
 
-    const handlePDUPortsMessage = async (data) => {
-        try {
-            //
-        } catch (error) {
-            console.error("Error processing status data:", error);
-        }
-    };
-
     useEffect(() => {
         const timer = setTimeout(() => {
             pingAllRpis();
@@ -937,7 +928,6 @@ const Dashboard = () => {
                         {Object.entries(midspans).map(([midspanId, midspanConfigData]) => {
                             const allVisibleTileIds = new Set();
 
-                            // Gather visible tile IDs
                             const source = viewMode === "walls" ? walls : segments;
                             visibleItems.forEach(name => {
                                 const tileGroup = source[name];
@@ -972,14 +962,21 @@ const Dashboard = () => {
                             );
                         })}
 
-                    {Object.entries(pduData).map(([pduId, deviceData]) => (
-                        <PDUDevice
-                            key={pduId}
-                            PDUId={pduId}
-                            PDUData={deviceData}
-                            ports={pduPortData[pduId] || {}}
-                        />
-                    ))}
+                    {Object.entries(pduData).map(([pduId, deviceData]) => {
+                        const isFaulty = deviceData?.data?.status?.value !== "active";
+
+                        if (showOnlyFaulty) return null;
+
+                        return (
+                            <PDUDevice
+                                key={pduId}
+                                PDUId={pduId}
+                                PDUData={deviceData}
+                                ports={pduPortData[pduId] || {}}
+                            />
+                        );
+                    })}
+
 
 
                     </Content>

@@ -70,7 +70,7 @@ const Segment = ({ segmentLabel, segmentData, updateTile, toggleSegment,selected
                                             tile={tiles[tileKey]}
                                             wallName={segmentLabel}
                                             updateTile={updateTile}
-                                            disabled={!segmentData.active} // Disable tiles if inactive
+                                            disabled={!segmentData.active}
                                             selectedDisplayField={selectedDisplayField}
                                         />
                                     ) : (
