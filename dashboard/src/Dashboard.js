@@ -886,6 +886,16 @@ const Dashboard = () => {
                         >
                             {showOnlyFaulty ? "Show All Tiles" : `Show Only Faulty (${faultyCount})`}
                         </Button>
+                        <Button
+                            onClick={() => {
+                                setSelectedTileId("TECHDASH");
+                                setGraphVisible(true);
+                            }}
+                            style={{ backgroundColor: "lightblue", color: "rgba(1,1,1,1)" }}
+                        >
+                            show TECHDASH graph
+                        </Button>
+
                     </div>
                 )}
 
