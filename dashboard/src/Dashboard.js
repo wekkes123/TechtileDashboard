@@ -10,6 +10,7 @@ import yaml from "js-yaml";
 import pingRpi from './Components/PingRpi';
 import GraphPage from "./Components/GraphPage";
 import MidspanDevice from "./Components/MidspanDevice";
+import PDUDevice from "./Components/PDUdevice";
 
 const { Header, Content, Footer } = Layout;
 
@@ -167,6 +168,44 @@ const pduReducer = (state, action) => {
     }
 };
 
+const pduPortReducer = (state, action) => {
+    switch (action.type) {
+        case 'UPDATE_POE_PORT':
+            const { pduId, portId, updates } = action.payload;
+            return {
+                ...state,
+                [pduId]: {
+                    ...state[pduId],
+                    [portId]: {
+                        ...state[pduId]?.[portId],
+                        ...updates,
+                        last_received: Date.now()
+                    }
+                }
+            };
+
+        case 'BULK_UPDATE_POE_PORTS':
+            const updatedState = { ...state };
+            action.payload.forEach(({ pduId, portId, updates }) => {
+                if (!updatedState[pduId]) {
+                    updatedState[pduId] = {};
+                }
+                updatedState[pduId][portId] = {
+                    ...updatedState[pduId][portId],
+                    ...updates,
+                    last_received: Date.now()
+                };
+            });
+            return updatedState;
+
+        case 'INITIALIZE_POE_PORTS':
+            return action.payload;
+
+        default:
+            return state;
+    }
+};
+
 // Server reducer for singleton server state
 const serverReducer = (state, action) => {
     switch (action.type) {
@@ -212,6 +251,7 @@ const Dashboard = () => {
     const [rpiCells, setRpiCells] = useState({});
     const [midspans, setMidspans] = useState({});
     const [midspanConnections, setMidspanConnections] = useState({});
+    const [pduDevices, setPduDevices] = useState({});
     const [wallNames, setWallNames] = useState({});
     const [open, setOpen] = useState(false);
     const [viewMode, setViewMode] = useState("walls")
@@ -239,12 +279,14 @@ const Dashboard = () => {
     const [midspanData, dispatchMidspan] = useReducer(midspanReducer, {});
     const [poePortsData, dispatchPoePorts] = useReducer(poePortsReducer, {});
     const [pduData, dispatchPdu] = useReducer(pduReducer, {});
+    const [pduPortData, dispatchPduPort] = useReducer(pduPortReducer, {});
     const [serverData, dispatchServer] = useReducer(serverReducer, {});
 
     const tilesRef = useRef(tiles);
     const midspanDataRef = useRef(midspanData);
     const poePortsDataRef = useRef(poePortsData);
     const pduDataRef = useRef(pduData);
+    const pduPortDataRef = useRef(pduPortData);
     const serverDataRef = useRef(serverData);
 
     useEffect(() => {
@@ -264,7 +306,10 @@ const Dashboard = () => {
     }, [pduData]);
 
     useEffect(() => {
-        console.log("de serverdata:", serverData)
+        pduPortDataRef.current = pduPortData;
+    }, [pduPortData]);
+
+    useEffect(() => {
         serverDataRef.current = serverData;
     }, [serverData]);
 
@@ -348,10 +393,16 @@ const Dashboard = () => {
                     }))
                 });
 
+                const pduDevicesConfig = {}
+                const ports = [1, 2, 3, 4, 5];
+                pduDevicesConfig["pdu-001"] = {"ports": ports}
+                pduDevicesConfig["pdu-002"] = {"ports": ports}  // TODO: add ports to PDU's
+
                 setRpiCells(allCells);
                 setMidspans(midspanConfig);
                 setMidspanConnections(midspanConnectionsConfig)
                 setWallNames(fetchedWallNames);
+                setPduDevices(pduDevicesConfig);
             })
             .catch((error) => console.error("Failed to load hosts.yaml:", error));
     }, []);
@@ -548,7 +599,6 @@ const Dashboard = () => {
     };
 
     const handleMidspanMessage = async (data) => {
-        console.log("midspandata:", data)
         try {
             if (!data || typeof data !== "object") {
                 console.warn("Received invalid midspan data:", data);
@@ -660,7 +710,6 @@ const Dashboard = () => {
     };
 
     const handleServerMessage = async (data) => {
-        console.log("server message:", data)
         try {
             if (!data || typeof data !== "object") {
                 console.warn("Received invalid data:", data);
@@ -853,6 +902,13 @@ const Dashboard = () => {
                                 />
                             );
                         })}
+
+                    {Object.entries(pduDevices).map(([pduId, pduData])=>{
+                        console.log("Devices: ", pduId)
+                        return (
+                            <PDUDevice key={pduId} PDUId={pduId} PDUData={pduData} ports={pduData.ports}/>
+                        )
+                    })}
                     </Content>
                 </Layout>
 
